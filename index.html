@@ -233,18 +233,21 @@ function isTokenValid(){
 }
 
 function fbGET(path,cb){
-  var tok=getToken();
-  var url=DB_URL+"/"+path+".json"+(tok?"?auth="+tok:"");
-  fetch(url).then(function(r){return r.json();}).then(function(d){cb(null,d);}).catch(function(e){cb(e,null);});
+  var url=DB_URL+"/"+path+".json";
+  fetch(url).then(function(r){
+    if(!r.ok)throw new Error("HTTP "+r.status);
+    return r.json();
+  }).then(function(d){cb(null,d);}).catch(function(e){cb(e,null);});
 }
 
 function fbPUT(path,data,cb){
-  var tok=getToken();
-  if(!tok){if(cb)cb(new Error("No token"));return;}
-  var url=DB_URL+"/"+path+".json?auth="+tok;
+  var url=DB_URL+"/"+path+".json";
   fetch(url,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)})
-    .then(function(r){return r.json();}).then(function(d){ONLINE=true;setSync(true);if(cb)cb(null,d);})
-    .catch(function(e){if(cb)cb(e,null);});
+    .then(function(r){
+      if(!r.ok)throw new Error("HTTP "+r.status);
+      return r.json();
+    }).then(function(d){setSync(true);if(cb)cb(null,d);})
+    .catch(function(e){setSync(false);if(cb)cb(e,null);});
 }
 
 function setSync(on){
@@ -253,40 +256,52 @@ function setSync(on){
   if(ind){ind.textContent=on?"Online":"Offline";ind.style.color=on?"#1D7A4F":"#C0392B";}
 }
 
+// Simple local login - no network needed
+var VALID_EMAIL="ketan@gmail.com";
+var VALID_PASS="Ketan@1234";
+
 function doLogin(){
-  var em=el("loginEmail").value.trim(),pw=el("loginPass").value;
+  var em=el("loginEmail").value.trim().toLowerCase();
+  var pw=el("loginPass").value.trim();
   var btn=el("loginBtn"),err=el("loginErr");
   err.style.display="none";
-  if(!em||!pw){err.textContent="Email aur Password dono likho!";err.style.display="block";return;}
-  btn.textContent="Login ho raha hai...";btn.disabled=true;
-  // Firebase Auth REST API
-  fetch(AUTH_URL+":signInWithPassword?key="+API_KEY,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({email:em,password:pw,returnSecureToken:true})
-  }).then(function(r){return r.json();}).then(function(d){
-    btn.textContent="Login";btn.disabled=false;
-    if(d.error){
-      var msg="Email ya Password galat hai!";
-      if(d.error.message==="TOO_MANY_ATTEMPTS_TRY_LATER")msg="Bahut zyada tries. Baad mein try karo.";
-      err.textContent=msg;err.style.display="block";
-      return;
+  if(!em||!pw){
+    err.textContent="Email aur Password dono likho!";
+    err.style.display="block";
+    return;
+  }
+  btn.textContent="Login ho raha hai...";
+  btn.disabled=true;
+  setTimeout(function(){
+    btn.textContent="Login";
+    btn.disabled=false;
+    var validEm=VALID_EMAIL.trim().toLowerCase();
+    var validPw=VALID_PASS.trim();
+    if(em===validEm&&pw===validPw){
+      CU={email:em};
+      TOKEN="local_auth_"+Date.now();
+      localStorage.setItem("kv_logged","yes");
+      localStorage.setItem("kv_user",em);
+      showApp();
+    } else {
+      err.textContent="Galat Email ya Password! Email: ketan@gmail.com";
+      err.style.display="block";
+      el("loginPass").value="";
     }
-    saveToken(d.idToken,d.expiresIn);
-    CU={email:em,uid:d.localId};
-    localStorage.setItem("fb_user",JSON.stringify(CU));
-    showApp();
-  }).catch(function(e){
-    btn.textContent="Login";btn.disabled=false;
-    err.textContent="Network error. Check internet connection.";err.style.display="block";
-  });
+  },500);
 }
+
+// Enter key se bhi login ho
+document.addEventListener("keydown",function(e){
+  if(e.key==="Enter"&&el("loginScreen").style.display!=="none"){
+    doLogin();
+  }
+});
 
 function doLogout(){
   TOKEN=null;CU=null;
-  localStorage.removeItem("fb_token");
-  localStorage.removeItem("fb_exp");
-  localStorage.removeItem("fb_user");
+  localStorage.removeItem("kv_logged");
+  localStorage.removeItem("kv_user");
   el("loginScreen").style.display="flex";
   el("mainApp").style.display="none";
 }
@@ -301,12 +316,13 @@ function showApp(){
   load();
 }
 
-// Check if already logged in on page load
+// Check if already logged in
 window.addEventListener("load",function(){
-  var savedUser=localStorage.getItem("fb_user");
-  if(isTokenValid()&&savedUser){
-    try{CU=JSON.parse(savedUser);}catch(e){}
-    TOKEN=getToken();
+  var loggedIn=localStorage.getItem("kv_logged");
+  var savedUser=localStorage.getItem("kv_user");
+  if(loggedIn==="yes"&&savedUser){
+    CU={email:savedUser};
+    TOKEN="local_auth_ok";
     showApp();
   } else {
     el("loginScreen").style.display="flex";
@@ -328,7 +344,6 @@ function iDesc(amt,rate,days,method){if(!rate||days<=0)return "";var i=calcI(amt
 function load(){
   var pl=el("partyList");
   if(pl)pl.innerHTML='<div class="empty">&#8987; Data load ho raha hai...</div>';
-  if(!isTokenValid()){loadLocal();if(P.length===0)seedDataIfEmpty();renderAll();return;}
 
   // Use REST API to load from Firebase
   fbGET("kv8",function(err,d){
