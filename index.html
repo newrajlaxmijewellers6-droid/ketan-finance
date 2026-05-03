@@ -122,7 +122,15 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .tot-box{background:var(--cream);border:1.5px solid var(--gold2);border-radius:12px;padding:12px;margin-bottom:10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
 .tl{font-size:11px;color:var(--t3);font-weight:700;margin-bottom:2px;text-transform:uppercase;}.tv{font-size:16px;font-weight:700;}
 .empty{text-align:center;color:var(--t4);padding:28px;font-size:14px;}
-@media print{.nav,.top,.add-txn,.btn.rd,.brow,.xb,.flt,.no-print{display:none!important;}body{background:#fff;}.page{display:block!important;padding:0;}.pb-table th{background:#5C4000!important;color:#FFE87C!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
+@media print{
+  .nav,.top,.add-txn,.brow,.xb,.flt,.no-print,.no-print-overlay{display:none!important;}
+  body{background:#fff;}
+  .page{display:block!important;padding:0;}
+  #printOverlay{position:static!important;padding:0!important;}
+  #loginScreen{display:none!important;}
+  #mainApp{display:block!important;}
+  .pb-table th{background:#5C4000!important;color:#FFE87C!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+}
 </style>
 </head><body>
 <div id="loginScreen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#3D2B00,#1A1000);padding:24px;">
@@ -144,6 +152,16 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 <p style="text-align:center;color:#8B6914;font-size:12px;margin-top:18px;">&#128274; Aapka data safe aur private hai</p>
 </div></div>
 <div id="mainApp" style="display:none;">
+<!-- PRINT OVERLAY -->
+<div id="printOverlay" style="display:none;position:fixed;inset:0;background:#fff;z-index:9999;overflow-y:auto;padding:20px;">
+  <div style="max-width:600px;margin:0 auto;">
+    <div style="display:flex;gap:8px;margin-bottom:16px;" class="no-print-overlay">
+      <button onclick="closePrintOverlay()" style="background:#C0392B;color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:14px;font-weight:700;cursor:pointer;">&#x2715; Close</button>
+      <button onclick="window.print()" style="background:#5C4000;color:#FFE87C;border:none;border-radius:8px;padding:10px 18px;font-size:14px;font-weight:700;cursor:pointer;">&#128424; Print / Save PDF</button>
+    </div>
+    <div id="printContent"></div>
+  </div>
+</div>
 <div class="top">
 <div><h1>Ketan Verma</h1><p>PERSONAL FINANCE &middot; NOT FOR FIRM</p></div>
 <div style="display:flex;align-items:center;gap:6px;">
@@ -216,13 +234,29 @@ function dago(s){var a=new Date(s),b=new Date();b.setHours(0,0,0,0);a.setHours(0
 function calcI(amt,rate,days,method){if(!rate||days<=0)return 0;var r=rate/100;if(method==="compound")return amt*(Math.pow(1+r/365,days)-1);return amt*r*days/365;}
 function iDesc(amt,rate,days,method){if(!rate||days<=0)return "";var i=calcI(amt,rate,days,method);if(method==="compound")return "Rs "+f(amt)+" x [(1+"+rate+"%/365)^"+days+"d - 1] = Rs "+f(i);return "Rs "+f(amt)+" x "+rate+"% x "+days+"d / 365 = Rs "+f(i);}
 function load(){
+  // Show loading state
+  var pl=el("partyList");
+  if(pl)pl.innerHTML='<div class="empty">Data load ho raha hai...</div>';
   if(!db){loadLocal();renderAll();return;}
   db.ref("kv8").once("value").then(function(snap){
     var d=snap.val();
-    if(d){P=fixP(d.p||[]);EX=fixEx(d.ex||[]);}
-    else{loadLocal();if(P.length||EX.length)fbSave();}
+    if(d&&(d.p||d.ex)){
+      P=fixP(d.p||[]);
+      EX=fixEx(d.ex||[]);
+      // Save to local as backup
+      try{localStorage.setItem("kv8_p",JSON.stringify(P));localStorage.setItem("kv8_ex",JSON.stringify(EX));}catch(e){}
+    } else {
+      // Firebase empty - try local
+      loadLocal();
+      // If local has data, push to Firebase
+      if(P.length||EX.length)fbSave();
+    }
     renderAll();
-  }).catch(function(){loadLocal();renderAll();});
+  }).catch(function(e){
+    console.log("Firebase load error:",e);
+    loadLocal();
+    renderAll();
+  });
 }
 function loadLocal(){
   try{var d=localStorage.getItem("kv8_p");if(d){var x=JSON.parse(d);if(Array.isArray(x))P=fixP(x);}}catch(e){}
@@ -457,6 +491,12 @@ function renderRec(){
   var tot='<div class="tot-box"><div><div class="tl">Total Aaya</div><div class="tv gn">Rs '+f(tIn)+"</div></div><div><div class='tl'>Total Gaya</div><div class='tv rd'>Rs "+f(tOut)+"</div></div><div><div class='tl'>Net</div><div class='tv "+(tIn-tOut>=0?"gn":"rd")+"'>Rs "+f(Math.abs(tIn-tOut))+"</div></div></div>";
   c.innerHTML=tot+rows.map(function(r){return '<div class="ri-card"><div class="ri-top"><div><div class="ri-name">'+r.name+"</div><div class='ri-meta'><span class='bdg "+r.bc+"'>"+(r.type)+"</span> &nbsp;"+r.date+(r.rate>0?" &nbsp;"+r.rate+"%":"")+"</div>"+(r.note?'<div class="ri-meta">'+r.note+"</div>":"")+(r.ic?'<div class="ri-calc">'+r.ic+"</div>":"")+"</div><div class='ri-amt "+r.ac+"'>Rs "+f(r.amt)+"</div></div></div>";}).join("");
 }
+function closePrintOverlay(){
+  var o=el("printOverlay");
+  o.style.display="none";
+  el("mainApp").style.overflow="";
+  document.body.style.overflow="";
+}
 function printPartyLedger(pid){
   var p=P.find(function(x){return x.id===pid;});if(!p)return;
   var st=pStats(p);var runBal=0;var rows="";
@@ -472,7 +512,6 @@ function printPartyLedger(pid){
     var ic=intr>0?iDesc(t.amt,t.rate,d,t.method):"";
     rows+="<tr><td>"+t.date+"</td><td>"+tl+"</td><td>"+(t.desc||"-")+"</td><td>"+(t.rate>0?t.rate+"%":"-")+"</td><td style='font-size:10px;color:#9B7A50;'>"+(ic||"-")+"</td><td style='text-align:right;color:#1D7A4F;font-weight:700;'>"+(crA?"Rs "+crA:"")+"</td><td style='text-align:right;color:#C0392B;font-weight:700;'>"+(drA?"Rs "+drA:"")+"</td><td style='text-align:right;font-weight:700;color:"+(runBal>=0?"#1D7A4F":"#C0392B")+"'>Rs "+f(Math.abs(runBal))+" "+(runBal>=0?"CR":"DR")+"</td></tr>";
   });
-  var w2=window.open("","_blank");
   var h="<!DOCTYPE html><html><head><meta charset='UTF-8'/><title>Ledger - "+p.name+"</title>";
   h+="<style>*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:12px;margin:0;padding:16px;color:#111;}";
   h+=".hdr{background:#5C4000;color:#FFE87C;padding:14px 18px;border-radius:8px;margin-bottom:14px;}";
@@ -498,7 +537,14 @@ function printPartyLedger(pid){
   var bal=st.bal;
   h+="<div class='foot'><div><strong>Net Balance: <span style='color:"+(bal>=0?"#1D7A4F":"#C0392B")+"'>Rs "+f(Math.abs(bal))+" "+(bal>=0?"(CR)":"(DR)")+"</span></strong></div><div style='font-size:11px;color:#9B7A50;'>"+p.txns.length+" transactions</div></div>";
   h+="</body></html>";
-  w2.document.write(h);w2.document.close();setTimeout(function(){w2.print();},400);
+  h+="</body></html>";
+  var overlay=el("printOverlay");
+  var pc=el("printContent");
+  pc.innerHTML=h;
+  overlay.style.display="block";
+  document.body.style.overflow="hidden";
+  el("mainApp").style.overflow="hidden";
+  setTimeout(function(){window.print();},600);
 }
 function csvParty(pid){
   var p=P.find(function(x){return x.id===pid;});if(!p)return;
