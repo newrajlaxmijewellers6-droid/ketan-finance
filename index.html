@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="theme-color" content="#1D9E75"/>
+<title>Ketan Verma Finance</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#F0F0F5;color:#111;font-size:15px;}
+.top{background:#1D9E75;color:#fff;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:999;}
+.top h1{font-size:17px;font-weight:700;}.top p{font-size:11px;opacity:.8;}
+.topbtns{display:flex;gap:6px;}
+.tbtn{background:rgba(255,255,255,.25);border:none;color:#fff;padding:7px 11px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;}
+.nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #ddd;display:flex;z-index:999;}
+.ni{flex:1;border:none;background:none;padding:8px 0 5px;font-size:10px;font-weight:600;color:#aaa;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.ni.on{color:#1D9E75;}.ni-ic{font-size:22px;line-height:1;}
+.page{display:none;padding:10px;padding-bottom:80px;max-width:500px;margin:0 auto;}.page.on{display:block;}
+.sum{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.sc{background:#fff;border-radius:10px;padding:10px 12px;border:1px solid #e5e5e5;}
+.sc.full{grid-column:1/-1;}
+.sl{font-size:11px;color:#888;font-weight:600;margin-bottom:3px;}.sv{font-size:18px;font-weight:700;}
+.gn{color:#1D9E75;}.rd{color:#D85A30;}.or{color:#BA7517;}.pu{color:#534AB7;}
+.alrt{background:#FDF0D5;border:1px solid #BA7517;border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:13px;color:#633806;font-weight:600;display:none;}
+.fc{background:#fff;border-radius:14px;border:1px solid #e5e5e5;overflow:hidden;margin-bottom:12px;}
+.fh{padding:12px 14px;color:#fff;font-size:15px;font-weight:700;}
+.fb{padding:12px 12px 6px;}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+.r1{margin-bottom:8px;}
+.fg{display:flex;flex-direction:column;gap:4px;}
+.fg label{font-size:12px;font-weight:700;color:#555;}
+input,select{width:100%;background:#F0F0F5;border:1.5px solid #ddd;border-radius:10px;padding:10px 11px;font-size:15px;font-family:inherit;color:#111;outline:none;min-height:46px;-webkit-appearance:none;}
+input:focus,select:focus{border-color:#1D9E75;background:#fff;}
+.ibox{background:#F0F0F5;border-radius:10px;padding:10px 11px;margin-bottom:8px;}
+.itl{font-size:12px;font-weight:700;color:#555;margin-bottom:8px;}
+.trow{display:flex;align-items:center;gap:10px;padding:5px 0;}
+.tlbl{font-size:14px;color:#555;flex:1;}
+.tgl{position:relative;width:48px;height:28px;flex-shrink:0;}
+.tgl input{opacity:0;width:0;height:0;}
+.ts{position:absolute;inset:0;background:#ccc;border-radius:14px;cursor:pointer;transition:.2s;}
+.ts::before{content:"";position:absolute;width:22px;height:22px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 2px 4px rgba(0,0,0,.2);}
+.tgl input:checked+.ts{background:#1D9E75;}
+.tgl input:checked+.ts::before{transform:translateX(20px);}
+.btn{display:flex;align-items:center;justify-content:center;padding:12px;border-radius:10px;border:1.5px solid #ddd;background:#fff;color:#111;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;min-height:48px;}
+.btn:active{opacity:.7;}
+.btn.gn{background:#1D9E75;color:#fff;border-color:#1D9E75;}
+.btn.rd{background:#D85A30;color:#fff;border-color:#D85A30;}
+.btn.bl{background:#185FA5;color:#fff;border-color:#185FA5;}
+.btn.pu{background:#534AB7;color:#fff;border-color:#534AB7;}
+.btn.or{background:#BA7517;color:#fff;border-color:#BA7517;}
+.btn.sm{padding:6px 10px;font-size:12px;min-height:32px;border-radius:8px;}
+.brow{display:flex;gap:8px;margin-top:10px;padding-bottom:8px;}
+.sec{font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin:14px 0 8px 2px;}
+.bdg{display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700;}
+.b-cr{background:#dcf5ec;color:#0F6E56;}.b-dr{background:#fde8e0;color:#993C1D;}
+.b-ir{background:#fdf0d5;color:#633806;}.b-ip{background:#eeedfe;color:#3C3489;}
+.b-em{background:#eeedfe;color:#3C3489;}.b-ex{background:#deedfb;color:#0C447C;}
+.b-pd{background:#dcf5ec;color:#0F6E56;}.b-ov{background:#fde8e0;color:#993C1D;}.b-pe{background:#fdf0d5;color:#633806;}
+.accard{background:#fff;border:1px solid #e5e5e5;border-radius:14px;margin-bottom:10px;overflow:hidden;}
+.ac-hdr{display:flex;align-items:center;gap:11px;padding:13px;cursor:pointer;}
+.ac-hdr:active{background:#f5f5f5;}
+.acav{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex-shrink:0;}
+.acname{font-weight:700;font-size:15px;}
+.acsub{font-size:12px;color:#888;margin-top:3px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;}
+.chv{color:#ccc;font-size:18px;margin-left:auto;flex-shrink:0;transition:transform .2s;}
+.chv.op{transform:rotate(180deg);}
+.ac-body{border-top:1px solid #eee;}
+.ac-stats{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border-bottom:1px solid #eee;background:#FAFAFA;}
+.ast{padding:8px 4px;text-align:center;border-right:1px solid #eee;}
+.ast:last-child{border-right:none;}
+.astl{font-size:10px;color:#888;font-weight:600;margin-bottom:2px;}
+.astv{font-size:13px;font-weight:700;}
+.addsec{padding:10px 12px;border-bottom:1px solid #eee;}
+.addsec-grn{background:#F0FFF8;}
+.addsec-org{background:#FFF8F0;}
+.addsec-title{font-size:12px;font-weight:700;color:#555;margin-bottom:8px;}
+.g3{display:grid;grid-template-columns:82px 1fr 68px;gap:6px;margin-bottom:6px;}
+.g4{display:grid;grid-template-columns:80px 1fr 62px 54px;gap:6px;margin-bottom:6px;}
+.g3 input,.g3 select,.g4 input,.g4 select{font-size:13px;min-height:38px;padding:6px 8px;}
+.addrow{display:flex;gap:6px;}
+.addrow select{flex:1;font-size:13px;min-height:38px;padding:6px 8px;}
+.addbtn{border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;min-height:38px;white-space:nowrap;color:#fff;}
+.pb-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.pb-table{width:100%;border-collapse:collapse;min-width:520px;font-size:12px;}
+.pb-table th{background:#F0F0F5;padding:7px 8px;font-size:11px;font-weight:700;color:#666;text-align:left;border-bottom:1px solid #eee;white-space:nowrap;}
+.pb-table td{padding:8px 8px;border-bottom:1px solid #eee;vertical-align:top;}
+.pb-table tr:last-child td{border-bottom:none;}
+.pb-table tr:nth-child(even) td{background:#FAFAFA;}
+.td-cr{color:#1D9E75;font-weight:700;text-align:right;}
+.td-dr{color:#D85A30;font-weight:700;text-align:right;}
+.td-bal{font-weight:700;text-align:right;}
+.td-ic{color:#BA7517;font-size:10px;margin-top:2px;}
+.ac-footer{padding:10px 12px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid #eee;background:#FAFAFA;flex-wrap:wrap;gap:6px;}
+.pcard{background:#fff;border:1px solid #e5e5e5;border-radius:14px;margin-bottom:10px;overflow:hidden;}
+.ph{display:flex;align-items:center;gap:11px;padding:13px;cursor:pointer;}
+.ph:active{background:#f5f5f5;}
+.pav{width:44px;height:44px;border-radius:50%;background:#eeedfe;color:#534AB7;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex-shrink:0;}
+.pnm{font-weight:700;font-size:15px;}
+.psb{font-size:12px;color:#888;margin-top:3px;display:flex;flex-wrap:wrap;gap:5px;}
+.pbdy{border-top:1px solid #eee;}
+.pst{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid #eee;background:#FAFAFA;}
+.ps{padding:9px 6px;text-align:center;border-right:1px solid #eee;}
+.ps:last-child{border-right:none;}
+.psl{font-size:10px;color:#888;font-weight:600;margin-bottom:2px;}.psv{font-size:14px;font-weight:700;}
+.emi{display:flex;align-items:center;gap:8px;padding:11px 13px;border-bottom:1px solid #eee;}
+.emi:last-child{border-bottom:none;}
+.el{flex:1;}.en{font-size:13px;font-weight:700;}.ed{font-size:11px;color:#aaa;margin-top:2px;}
+.ea{font-size:14px;font-weight:700;flex-shrink:0;margin-right:4px;}
+.eac{display:flex;flex-direction:column;gap:4px;align-items:flex-end;}
+.rc{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:12px;display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.rav{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0;}
+.ri{flex:1;min-width:0;}.rn{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rs{font-size:12px;color:#888;margin-top:2px;}.rr{text-align:right;flex-shrink:0;}
+.ra{font-size:16px;font-weight:700;}
+.xb{background:none;border:none;color:#ccc;font-size:20px;cursor:pointer;padding:4px;flex-shrink:0;}
+.flt{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
+.flt select,.flt input{flex:1;min-height:42px;font-size:13px;min-width:100px;}
+.ri-card{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:12px 13px;margin-bottom:8px;}
+.ri-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.ri-name{font-weight:700;font-size:14px;}
+.ri-amt{font-size:15px;font-weight:700;flex-shrink:0;}
+.ri-meta{font-size:12px;color:#888;margin-top:4px;}
+.ri-calc{font-size:11px;color:#BA7517;margin-top:4px;background:#FFF8F0;border-radius:6px;padding:5px 8px;}
+.tot-box{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:12px;margin-bottom:10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.tl{font-size:11px;color:#888;font-weight:600;margin-bottom:2px;}
+.tv{font-size:16px;font-weight:700;}
+.empty{text-align:center;color:#aaa;padding:28px;font-size:14px;}
+@media print{
+.nav,.top,.addsec,.btn.rd,.eac,.brow,.xb,.flt,.no-print{display:none!important;}
+body{background:#fff;font-size:12px;}
+.page{display:block!important;padding:0;}
+.pb-table th,.pb-table td{padding:5px 6px!important;font-size:11px!important;}
+}
+</style>
+</head>
+<body>
+<div class="top">
+<div><h1>Ketan Verma</h1><p>Personal Finance - Not for firm</p></div>
+<div class="topbtns">
+<button class="tbtn" onclick="window.print()">Print</button>
+<button class="tbtn" onclick="doCSV()">CSV</button>
+</div></div>
+<div class="page on" id="pg-ledger">
+<div class="alrt" id="alrtBox"></div>
+<div class="sum" id="sg1"></div>
+<div class="fc no-print">
+<div class="fh" style="background:#1D9E75;">+ Naya Party Account Banao</div>
+<div class="fb">
+<div class="r2"><div class="fg"><label>Party Ka Naam</label><input id="acname" placeholder="Naam"/></div>
+<div class="fg"><label>Phone (optional)</label><input id="acphone" placeholder="Mobile" type="tel" inputmode="tel"/></div></div>
+<div class="brow"><button class="btn gn" style="flex:1" onclick="addAccount()">+ Account Banao</button>
+<button class="btn" onclick="clrAcForm()">Clear</button></div>
+</div></div>
+<div class="sec">Party Accounts</div>
+<div id="acList"><div class="empty">Koi account nahi. Upar se banao.</div></div>
+</div>
+<div class="page" id="pg-party">
+<div class="sum" id="sg2"></div>
+<div class="fc no-print">
+<div class="fh" style="background:#534AB7;">+ Party / Loan / EMI</div>
+<div class="fb">
+<div class="r2"><div class="fg"><label>Party Naam</label><input id="pn" placeholder="Naam"/></div>
+<div class="fg"><label>Phone</label><input id="pph" placeholder="Optional" type="tel"/></div></div>
+<div class="r2"><div class="fg"><label>Total Amount (Rs)</label><input type="number" id="pt" placeholder="Loan total" inputmode="decimal"/></div>
+<div class="fg"><label>Start Date</label><input type="date" id="psd"/></div></div>
+<div class="r2"><div class="fg"><label>EMI/Month (Rs)</label><input type="number" id="pe" placeholder="Har mahine" inputmode="decimal"/></div>
+<div class="fg"><label>Total EMIs</label><input type="number" id="pm" placeholder="e.g. 12" inputmode="numeric"/></div></div>
+<div class="r2"><div class="fg"><label>Interest Rate %</label><input type="number" id="prate" value="0" inputmode="decimal"/></div>
+<div class="fg"><label>Type</label><select id="ptype"><option value="given">Maine Diya</option><option value="taken">Maine Liya</option></select></div></div>
+<div class="r1 fg"><label>Note</label><input id="pnote" placeholder="Optional"/></div>
+<div class="brow"><button class="btn pu" style="flex:1" onclick="addParty()">+ Add Party</button>
+<button class="btn" onclick="clrP()">Clear</button></div>
+</div></div>
+<div class="sec">Party / EMI List</div>
+<div id="pList"><div class="empty">Koi party nahi.</div></div>
+</div>
+<div class="page" id="pg-expense">
+<div class="sum" id="sg3"></div>
+<div class="fc no-print">
+<div class="fh" style="background:#185FA5;">+ Kharcha Add Karo</div>
+<div class="fb">
+<div class="r2"><div class="fg"><label>Naam</label><input id="en" placeholder="e.g. Grocery"/></div>
+<div class="fg"><label>Date</label><input type="date" id="ed"/></div></div>
+<div class="r2"><div class="fg"><label>Category</label><select id="ec">
+<option>Khana aur Grocery</option><option>Travel aur Petrol</option><option>Medical</option>
+<option>Bijli Pani Bill</option><option>Entertainment</option><option>Kapde</option>
+<option>Padhai</option><option>Ghar ka Kharcha</option><option>EMI aur Loan</option><option>Aur Kuch</option>
+</select></div>
+<div class="fg"><label>Amount (Rs)</label><input type="number" id="ea" placeholder="0" inputmode="decimal"/></div></div>
+<div class="r1 fg"><label>Note</label><input id="enote" placeholder="Optional"/></div>
+<div class="brow"><button class="btn bl" style="flex:1" onclick="addExp()">+ Kharcha Add Karo</button>
+<button class="btn" onclick="clrE()">Clear</button></div>
+</div></div>
+<div class="sec">Kharche Ki List</div>
+<div id="eList"><div class="empty">Koi kharcha nahi.</div></div>
+</div>
+<div class="page" id="pg-records">
+<div class="flt no-print">
+<select id="rf" onchange="renderRec()"><option value="all">Sab Records</option>
+<option value="CR">Sirf Credit</option><option value="DR">Sirf Debit</option>
+<option value="INT">Interest Only</option><option value="EMI">EMI</option><option value="EXP">Kharche</option></select>
+<input type="month" id="rm" onchange="renderRec()"/>
+</div>
+<div class="flt no-print">
+<button class="btn gn" style="flex:1;font-size:13px;" onclick="printRec()">Print Records</button>
+<button class="btn bl" style="flex:1;font-size:13px;" onclick="dlRec()">Download CSV</button>
+</div>
+<div id="recList"><div class="empty">Koi records nahi.</div></div>
+</div>
+<div class="nav">
+<button class="ni on" onclick="goTab('ledger',this)"><span class="ni-ic">&#128218;</span>Accounts</button>
+<button class="ni" onclick="goTab('party',this)"><span class="ni-ic">&#128197;</span>Party EMI</button>
+<button class="ni" onclick="goTab('expense',this)"><span class="ni-ic">&#128176;</span>Kharcha</button>
+<button class="ni" onclick="goTab('records',this)"><span class="ni-ic">&#128196;</span>Records</button>
+</div>
+<script>
+var AC=[],EP=[],EX=[];
+var COLORS=["#185FA5","#1D9E75","#D85A30","#534AB7","#BA7517","#2E7D32","#C62828"];
+function load(){
+  try{AC=JSON.parse(localStorage.getItem("kv7_ac")||"[]");}catch(e){AC=[];}
+  try{EP=JSON.parse(localStorage.getItem("kv7_ep")||"[]");}catch(e){EP=[];}
+  try{EX=JSON.parse(localStorage.getItem("kv7_ex")||"[]");}catch(e){EX=[];}
+}
+function save(){
+  try{
+    localStorage.setItem("kv7_ac",JSON.stringify(AC));
+    localStorage.setItem("kv7_ep",JSON.stringify(EP));
+    localStorage.setItem("kv7_ex",JSON.stringify(EX));
+  }catch(e){alert("Storage full. CSV export karo.");}
+}
+function f(n){return parseFloat(n||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});}
+function td(){return new Date().toISOString().split("T")[0];}
+function ini(s){var w2=s.trim().split(" ");return(w2.length>1?w2[0][0]+w2[w2.length-1][0]:s.slice(0,2)).toUpperCase();}
+function dago(s){var a=new Date(s),b=new Date();b.setHours(0,0,0,0);a.setHours(0,0,0,0);return Math.max(0,Math.floor((b-a)/86400000));}
+function el(id){return document.getElementById(id);}
+function vl(id){return el(id).value;}
+function calcI(amt,rate,days,method){
+  if(!rate||days<=0)return 0;
+  var r=rate/100;
+  if(method==="compound")return amt*(Math.pow(1+r/365,days)-1);
+  return amt*r*days/365;
+}
+function iDesc(amt,rate,days,method){
+  if(!rate||days<=0)return "";
+  var i=calcI(amt,rate,days,method);
+  if(method==="compound")return "Rs "+f(amt)+" x [(1+"+rate+"%/365)^"+days+"din - 1] = Rs "+f(i);
+  return "Rs "+f(amt)+" x "+rate+"% p.a. x "+days+" din / 365 = Rs "+f(i);
+}
+function addAccount(){
+  var nm=vl("acname").trim(),ph=vl("acphone").trim();
+  if(!nm){alert("Party ka naam likho!");return;}
+  AC.unshift({id:Date.now(),name:nm,phone:ph,txns:[],open:true});
+  save();renderAc();updateSum();clrAcForm();
+}
+function clrAcForm(){el("acname").value="";el("acphone").value="";}
+function delAc(id){
+  if(!confirm("Poora account delete hoga?"))return;
+  AC=AC.filter(function(a){return a.id!==id;});
+  save();renderAc();updateSum();
+}
+function togAc(id){
+  var a=AC.find(function(x){return x.id===id;});
+  if(a)a.open=!a.open;
+  save();renderAc();
+}
+function addTxn(acid){
+  var a=AC.find(function(x){return x.id===acid;});
+  if(!a)return;
+  var date=vl("td_"+acid);
+  var type=vl("tt_"+acid);
+  var amt=parseFloat(vl("ta_"+acid));
+  var desc=vl("tdesc_"+acid).trim();
+  var rate=parseFloat(vl("tr_"+acid))||0;
+  var method=vl("tm_"+acid);
+  if(!date||isNaN(amt)||amt<=0){alert("Date aur Amount zaroori hai!");return;}
+  a.txns.push({id:Date.now(),date:date,type:type,amt:amt,desc:desc,rate:rate,method:method});
+  a.txns.sort(function(x,y){return new Date(x.date)-new Date(y.date);});
+  save();renderAc();updateSum();
+  el("ta_"+acid).value="";
+  el("tdesc_"+acid).value="";
+  el("td_"+acid).value=td();
+  el("tr_"+acid).value="12";
+}
+function addItxn(acid){
+  var a=AC.find(function(x){return x.id===acid;});
+  if(!a)return;
+  var date=vl("itd_"+acid);
+  var type=vl("itt_"+acid);
+  var amt=parseFloat(vl("ita_"+acid));
+  var desc=vl("itdesc_"+acid).trim();
+  if(!date||isNaN(amt)||amt<=0){alert("Date aur Amount zaroori hai!");return;}
+  if(!desc)desc=(type==="INT_RECV")?"Interest Mila":"Interest Diya";
+  a.txns.push({id:Date.now(),date:date,type:type,amt:amt,desc:desc,rate:0,method:"simple"});
+  a.txns.sort(function(x,y){return new Date(x.date)-new Date(y.date);});
+  save();renderAc();updateSum();
+  el("ita_"+acid).value="";
+  el("itdesc_"+acid).value="";
+  el("itd_"+acid).value=td();
+}
+function delTxn(acid,tid){
+  if(!confirm("Transaction delete karo?"))return;
+  var a=AC.find(function(x){return x.id===acid;});
+  if(!a)return;
+  a.txns=a.txns.filter(function(t){return t.id!==tid;});
+  save();renderAc();updateSum();
+}
+function acStats(a){
+  var tCR=0,tDR=0,tIR=0,tIP=0,bal=0;
+  a.txns.forEach(function(t){
+    var d=dago(t.date);
+    var intr=(t.type==="CR"||t.type==="DR")?calcI(t.amt,t.rate,d,t.method):0;
+    var tot=t.amt+intr;
+    if(t.type==="CR"){tCR+=tot;bal+=tot;}
+    else if(t.type==="DR"){tDR+=tot;bal-=tot;}
+    else if(t.type==="INT_RECV"){tIR+=t.amt;bal+=t.amt;}
+    else if(t.type==="INT_PAID"){tIP+=t.amt;bal-=t.amt;}
+  });
+  return {tCR:tCR,tDR:tDR,tIR:tIR,tIP:tIP,bal:bal};
+}
+function renderAc(){
+  var c=el("acList");
+  if(!AC.length){c.innerHTML='<div class="empty">Koi account nahi. Upar se banao.</div>';return;}
+  var html="";
+  AC.forEach(function(a,idx){
+    var st=acStats(a);
+    var bg=COLORS[idx%COLORS.length];
+    var runBal=0;
+    var pbRows="";
+    if(a.txns.length){
+      pbRows+='<tr><th>Date</th><th>Vivaran</th><th>Rate</th><th>Type</th><th style="text-align:right">Credit</th><th style="text-align:right">Debit</th><th style="text-align:right">Balance</th><th class="no-print"></th></tr>';
+      a.txns.forEach(function(t){
+        var d=dago(t.date);
+        var intr=(t.type==="CR"||t.type==="DR")?calcI(t.amt,t.rate,d,t.method):0;
+        var tot=t.amt+intr;
+        var crA="",drA="",tbdg="",rS="";
+        if(t.type==="CR"){runBal+=tot;crA=f(tot);tbdg='<span class="bdg b-cr">CR</span>';rS=t.rate>0?t.rate+"%":"-";}
+        else if(t.type==="DR"){runBal-=tot;drA=f(tot);tbdg='<span class="bdg b-dr">DR</span>';rS=t.rate>0?t.rate+"%":"-";}
+        else if(t.type==="INT_RECV"){runBal+=t.amt;crA=f(t.amt);tbdg='<span class="bdg b-ir">Int Mila</span>';rS="-";}
+        else if(t.type==="INT_PAID"){runBal-=t.amt;drA=f(t.amt);tbdg='<span class="bdg b-ip">Int Diya</span>';rS="-";}
+        var ic=intr>0?'<div class="td-ic">'+iDesc(t.amt,t.rate,d,t.method)+"</div>":"";
+        var bc=runBal>=0?"gn":"rd";
+        pbRows+='<tr>'+
+          '<td style="white-space:nowrap;color:#888;font-size:11px;">'+t.date+"</td>"+
+          "<td>"+(t.desc||"-")+ic+"</td>"+
+          '<td style="font-size:11px;color:#BA7517;">'+rS+"</td>"+
+          "<td>"+tbdg+"</td>"+
+          '<td class="td-cr">'+( crA?"Rs "+crA:""  )+"</td>"+
+          '<td class="td-dr">'+( drA?"Rs "+drA:""  )+"</td>"+
+          '<td class="td-bal '+bc+'">Rs '+f(Math.abs(runBal))+'<br/><span style="font-size:9px;color:#aaa;">'+( runBal>=0?"CR":"DR" )+"</span></td>"+
+          '<td class="no-print"><button class="btn sm rd" onclick="delTxn('+a.id+','+t.id+')">Del</button></td>'+
+          "</tr>";
+      });
+    }
+    var tbl=a.txns.length
+      ?'<div class="pb-wrap"><table class="pb-table">'+pbRows+"</table></div>"
+      :'<div class="empty" style="padding:14px;">Koi transaction nahi.</div>';
+    var body="";
+    if(a.open){
+      body+='<div class="ac-body">';
+      body+='<div class="ac-stats">';
+      body+='<div class="ast"><div class="astl">Total CR</div><div class="astv gn">Rs '+f(st.tCR)+"</div></div>";
+      body+='<div class="ast"><div class="astl">Total DR</div><div class="astv rd">Rs '+f(st.tDR)+"</div></div>";
+      body+='<div class="ast"><div class="astl">Int Mila</div><div class="astv or">Rs '+f(st.tIR)+"</div></div>";
+      body+='<div class="ast"><div class="astl">Int Diya</div><div class="astv pu">Rs '+f(st.tIP)+"</div></div>";
+      body+="</div>";
+      body+='<div class="addsec addsec-grn no-print">';
+      body+='<div class="addsec-title">+ Nayi CR / DR Entry (Har entry ka alag interest rate)</div>';
+      body+='<div class="g4">';
+      body+='<input type="date" id="td_'+a.id+'" value="'+td()+'" style="font-size:12px;min-height:38px;padding:6px;"\/>';
+      body+='<input id="tdesc_'+a.id+'" placeholder="Vivaran..." style="font-size:13px;min-height:38px;padding:6px;"\/>';
+      body+='<input type="number" id="ta_'+a.id+'" placeholder="Rs" inputmode="decimal" style="font-size:13px;min-height:38px;padding:6px;"\/>';
+      body+='<input type="number" id="tr_'+a.id+'" placeholder="Rate%" value="12" inputmode="decimal" style="font-size:12px;min-height:38px;padding:6px;"\/>';
+      body+="</div>";
+      body+='<div class="addrow">';
+      body+='<select id="tt_'+a.id+'" style="font-size:13px;min-height:38px;padding:6px;"><option value="CR">Credit (Mila)</option><option value="DR">Debit (Diya)</option></select>';
+      body+='<select id="tm_'+a.id+'" style="font-size:13px;min-height:38px;padding:6px;width:110px;"><option value="simple">Simple</option><option value="compound">Compound</option></select>';
+      body+='<button onclick="addTxn('+a.id+')" class="addbtn" style="background:#1D9E75;">+ Add</button>';
+      body+="</div></div>";
+      body+='<div class="addsec addsec-org no-print">';
+      body+='<div class="addsec-title" style="color:#BA7517;">+ Interest Entry (Diya ya Mila)</div>';
+      body+='<div class="g3">';
+      body+='<input type="date" id="itd_'+a.id+'" value="'+td()+'" style="font-size:12px;min-height:38px;padding:6px;"\/>';
+      body+='<input id="itdesc_'+a.id+'" placeholder="Note..." style="font-size:13px;min-height:38px;padding:6px;"\/>';
+      body+='<input type="number" id="ita_'+a.id+'" placeholder="Rs" inputmode="decimal" style="font-size:13px;min-height:38px;padding:6px;"\/>';
+      body+="</div>";
+      body+='<div class="addrow">';
+      body+='<select id="itt_'+a.id+'" style="font-size:13px;min-height:38px;padding:6px;"><option value="INT_RECV">Interest Mila (Received)</option><option value="INT_PAID">Interest Diya (Paid)</option></select>';
+      body+='<button onclick="addItxn('+a.id+')" class="addbtn" style="background:#BA7517;">+ Add</button>';
+      body+="</div></div>";
+      body+=tbl;
+      body+='<div class="ac-footer">';
+      body+='<div><div style="font-size:14px;font-weight:700;">Net Balance: <span class="'+( st.bal>=0?"gn":"rd" )+'">Rs '+f(Math.abs(st.bal))+' '+( st.bal>=0?"(CR)":"(DR)" )+"</span></div>";
+      if(st.tIR>0||st.tIP>0)body+='<div style="font-size:11px;color:#888;margin-top:2px;">Int Mila: Rs '+f(st.tIR)+' | Int Diya: Rs '+f(st.tIP)+"</div>";
+      body+="</div>";
+      body+='<button class="btn sm rd no-print" onclick="delAc('+a.id+')">Delete</button>';
+      body+="</div>";
+      body+="</div>";
+    }
+    html+='<div class="accard">'+
+      '<div class="ac-hdr" onclick="togAc('+a.id+')">'+
+      '<div class="acav" style="background:'+bg+';color:#fff;">'+ini(a.name)+"</div>"+
+      "<div style='flex:1;min-width:0;'>"+
+      '<div class="acname">'+a.name+(a.phone?' <span style="font-size:11px;font-weight:400;color:#888;">("+a.phone+")</span>':"")+'</div>'+
+      '<div class="acsub">'+a.txns.length+' entries &nbsp;<span class="bdg '+( st.bal>=0?"b-cr":"b-dr" )+'">Bal: Rs '+f(Math.abs(st.bal))+' '+( st.bal>=0?"CR":"DR" )+"</span></div>"+
+      "</div>"+
+      '<span class="chv'+( a.open?" op":"" )+'">&#9660;</span>'+
+      "</div>"+body+"</div>";
+  });
+  c.innerHTML=html;
+}
+function addParty(){
+  var nm=vl("pn").trim(),ph=vl("pph").trim(),tot=parseFloat(vl("pt")),st=vl("psd");
+  var ea=parseFloat(vl("pe")),mn=parseInt(vl("pm")),rt=parseFloat(vl("prate"))||0;
+  var pt=vl("ptype"),no=vl("pnote").trim();
+  if(!nm||!st||isNaN(tot)||tot<=0||isNaN(ea)||ea<=0||isNaN(mn)||mn<1){alert("Sab fields bharo!");return;}
+  var emis=[];
+  for(var i=0;i<mn;i++){var d=new Date(st);d.setMonth(d.getMonth()+i);emis.push({no:i+1,due:d.toISOString().split("T")[0],amt:ea,paid:false,pdate:null});}
+  EP.unshift({id:Date.now(),name:nm,phone:ph,total:tot,start:st,emiAmt:ea,months:mn,rate:rt,ptype:pt,note:no,emis:emis,open:true});
+  save();renderP();updateSum();clrP();
+}
+function clrP(){["pn","pph","pt","pe","pm","pnote"].forEach(function(id){el(id).value="";});el("psd").value=td();el("prate").value="0";}
+function delParty(id){if(!confirm("Party delete karo?"))return;EP=EP.filter(function(x){return x.id!==id;});save();renderP();updateSum();}
+function togP(id){var p=EP.find(function(x){return x.id===id;});if(p)p.open=!p.open;save();renderP();}
+function markEmi(pid,no,paid){
+  var p=EP.find(function(x){return x.id===pid;});if(!p)return;
+  var e=p.emis.find(function(x){return x.no===no;});if(!e)return;
+  e.paid=paid;e.pdate=paid?td():null;save();renderP();updateSum();
+}
+function renderP(){
+  var c=el("pList");
+  if(!EP.length){c.innerHTML='<div class="empty">Koi party nahi.</div>';return;}
+  var html="";
+  EP.forEach(function(p){
+    var pc=p.emis.filter(function(e){return e.paid;}).length;
+    var ov=p.emis.filter(function(e){return !e.paid&&e.due<=td();}).length;
+    var pa=pc*p.emiAmt,rm=Math.max(0,p.total-pa);
+    var it=p.rate>0?calcI(p.total,p.rate,dago(p.start),"simple"):0;
+    var lb=p.ptype==="given"?'<span class="bdg b-cr">Maine Diya</span>':'<span class="bdg b-dr">Maine Liya</span>';
+    var ob=ov?'<span class="bdg b-ov">'+ov+" Overdue</span>":"";
+    var body="";
+    if(p.open){
+      var ic=p.rate>0?'<div style="background:#FFF8F0;padding:8px 12px;font-size:11px;color:#BA7517;border-bottom:1px solid #eee;">Interest: '+iDesc(p.total,p.rate,dago(p.start),"simple")+"</div>":"";
+      var eh=p.emis.map(function(e){
+        var isO=!e.paid&&e.due<=td();
+        var sb=e.paid?'<span class="bdg b-pd">Paid</span>':isO?'<span class="bdg b-ov">Overdue</span>':'<span class="bdg b-pe">Pending</span>';
+        var ab=e.paid?'<button class="btn sm" onclick="markEmi('+p.id+","+e.no+',false)">Undo</button>':'<button class="btn sm gn" onclick="markEmi('+p.id+","+e.no+',true)">Mark Paid</button>';
+        return '<div class="emi"><div class="el"><div class="en">EMI '+e.no+"/"+p.months+"</div>"+'<div class="ed">Due: '+e.due+(e.pdate?" | Paid: "+e.pdate:"")+"</div></div>"+'<div class="ea '+( e.paid?"gn":isO?"rd":"or" )+'">Rs '+f(e.amt)+"</div>"+'<div class="eac">'+sb+ab+"</div></div>";
+      }).join("");
+      body='<div class="pbdy"><div class="pst"><div class="ps"><div class="psl">Paid</div><div class="psv gn">Rs '+f(pa)+"</div></div>"+'<div class="ps"><div class="psl">Baki</div><div class="psv rd">Rs '+f(rm)+"</div></div>"+'<div class="ps"><div class="psl">Interest</div><div class="psv or">Rs '+f(it)+"</div></div></div>"+ic+eh+'<div style="padding:10px;text-align:right;border-top:1px solid #eee;"><button class="btn sm rd no-print" onclick="delParty('+p.id+')">Delete</button></div></div>';
+    }
+    html+='<div class="pcard"><div class="ph" onclick="togP('+p.id+')"><div class="pav">'+ini(p.name)+"</div>"+'<div style="flex:1;min-width:0;"><div class="pnm">'+p.name+(p.phone?" ("+p.phone+")":"")+"</div>"+'<div class="psb">Rs '+f(p.emiAmt)+"/mo x "+p.months+" EMI &nbsp;"+lb+"&nbsp;"+ob+"</div></div>"+'<span class="chv'+( p.open?" op":"" )+'">&#9660;</span></div>'+body+"</div>";
+  });
+  c.innerHTML=html;
+}
+function addExp(){
+  var nm=vl("en").trim(),dt=vl("ed"),ct=vl("ec"),am=parseFloat(vl("ea")),no=vl("enote").trim();
+  if(!nm||!dt||isNaN(am)||am<=0){alert("Naam, Date, Amount zaroori hai!");return;}
+  EX.unshift({id:Date.now(),name:nm,date:dt,cat:ct,amt:am,note:no});
+  save();renderE();updateSum();clrE();
+}
+function delExp(id){if(!confirm("Delete karo?"))return;EX=EX.filter(function(x){return x.id!==id;});save();renderE();updateSum();}
+function clrE(){["en","ea","enote"].forEach(function(id){el(id).value="";});el("ed").value=td();}
+function renderE(){
+  var c=el("eList");
+  if(!EX.length){c.innerHTML='<div class="empty">Koi kharcha nahi.</div>';return;}
+  c.innerHTML=EX.map(function(e){
+    return '<div class="rc"><div class="rav" style="background:#deedfb;color:#185FA5;">'+ini(e.name)+"</div>"+
+    '<div class="ri"><div class="rn">'+e.name+"</div>"+'<div class="rs"><span class="bdg b-ex">'+e.cat+"</span> "+e.date+"</div>"+(e.note?'<div class="rs">'+e.note+"</div>":"")+'</div>'+
+    '<div class="rr"><div class="ra rd">Rs '+f(e.amt)+"</div></div>"+
+    '<button class="xb no-print" onclick="delExp('+e.id+')">&times;</button></div>';
+  }).join("");
+}
+function buildRows(filter,month){
+  var rows=[];
+  AC.forEach(function(a){
+    a.txns.forEach(function(t){
+      var tf=t.type;
+      if(tf==="INT_RECV"||tf==="INT_PAID")tf="INT";
+      if(filter!=="all"&&filter!==t.type&&filter!==tf)return;
+      if(filter==="EMI"||filter==="EXP")return;
+      if(month&&!t.date.startsWith(month))return;
+      var d=dago(t.date);
+      var intr=(t.type==="CR"||t.type==="DR")?calcI(t.amt,t.rate,d,t.method):0;
+      var ic=intr>0?iDesc(t.amt,t.rate,d,t.method):"";
+      var bc=t.type==="CR"?"b-cr":t.type==="DR"?"b-dr":t.type==="INT_RECV"?"b-ir":"b-ip";
+      var ac=t.type==="CR"||t.type==="INT_RECV"?"gn":"rd";
+      var tl=t.type==="INT_RECV"?"Int Mila":t.type==="INT_PAID"?"Int Diya":t.type;
+      rows.push({date:t.date,type:tl,name:a.name,amt:t.amt+intr,ic:ic,note:t.desc||"",bc:bc,ac:ac,rate:t.rate});
+    });
+  });
+  if(filter==="all"||filter==="EMI"){
+    EP.forEach(function(p){
+      p.emis.forEach(function(e){
+        if(month&&!e.due.startsWith(month))return;
+        var isO=!e.paid&&e.due<=td();
+        var ic=p.rate>0?iDesc(p.total,p.rate,dago(p.start),"simple"):"";
+        rows.push({date:e.due,type:"EMI",name:p.name,amt:e.amt,ic:ic,note:"EMI "+e.no+"/"+p.months+" - "+(e.paid?"Paid":isO?"Overdue":"Pending"),bc:"b-em",ac:e.paid?"gn":isO?"rd":"or",rate:p.rate});
+      });
+    });
+  }
+  if(filter==="all"||filter==="EXP"){
+    EX.forEach(function(e){
+      if(month&&!e.date.startsWith(month))return;
+      rows.push({date:e.date,type:"EXP",name:e.name,amt:e.amt,ic:"",note:e.cat+(e.note?" - "+e.note:""),bc:"b-ex",ac:"rd",rate:0});
+    });
+  }
+  rows.sort(function(a,b){return new Date(b.date)-new Date(a.date);});
+  return rows;
+}
+function renderRec(){
+  var filter=vl("rf"),month=vl("rm"),rows=buildRows(filter,month);
+  var c=el("recList");
+  if(!rows.length){c.innerHTML='<div class="empty">Koi record nahi mila.</div>';return;}
+  var tIn=0,tOut=0;
+  rows.forEach(function(r){if(r.ac==="gn")tIn+=r.amt;else tOut+=r.amt;});
+  var tot='<div class="tot-box"><div><div class="tl">Total Aaya</div><div class="tv gn">Rs '+f(tIn)+"</div></div>"+'<div><div class="tl">Total Gaya</div><div class="tv rd">Rs '+f(tOut)+"</div></div>"+'<div><div class="tl">Net</div><div class="tv '+( tIn-tOut>=0?"gn":"rd" )+'">Rs '+f(Math.abs(tIn-tOut))+"</div></div></div>";
+  c.innerHTML=tot+rows.map(function(r){
+    return '<div class="ri-card"><div class="ri-top"><div><div class="ri-name">'+r.name+"</div>"+'<div class="ri-meta"><span class="bdg '+r.bc+'">'+r.type+"</span> &nbsp;"+r.date+(r.rate>0?" &nbsp;Rate: "+r.rate+"%":"")+"</div>"+(r.note?'<div class="ri-meta">'+r.note+"</div>":"")+(r.ic?'<div class="ri-calc">Interest: '+r.ic+"</div>":"")+"</div>"+'<div class="ri-amt '+r.ac+'">Rs '+f(r.amt)+"</div></div></div>";
+  }).join("");
+}
+function printRec(){
+  var filter=vl("rf"),month=vl("rm"),rows=buildRows(filter,month);
+  var tIn=0,tOut=0;
+  rows.forEach(function(r){if(r.ac==="gn")tIn+=r.amt;else tOut+=r.amt;});
+  var w2=window.open("","_blank");
+  var h="<!DOCTYPE html><html><head><meta charset='UTF-8'/><title>Records - Ketan Verma</title>";
+  h+='<style>body{font-family:Arial,sans-serif;font-size:12px;margin:20px;}h2{font-size:16px;}p{color:#666;font-size:11px;margin-bottom:10px;}table{width:100%;border-collapse:collapse;}th{background:#f0f0f0;padding:7px;text-align:left;font-size:11px;border:1px solid #ccc;}td{padding:7px;border:1px solid #ddd;font-size:12px;vertical-align:top;}tr:nth-child(even) td{background:#fafafa;}.gn{color:#1D9E75;font-weight:700;}.rd{color:#D85A30;font-weight:700;}.ic{font-size:10px;color:#BA7517;margin-top:2px;background:#FFF8F0;padding:2px 4px;border-radius:2px;}.tot{background:#f5f5f5;font-weight:700;}</style>';
+  h+="</head><body>";
+  h+="<h2>Ketan Verma - Personal Finance Records</h2>";
+  h+='<p>Date: '+td()+" | Filter: "+filter+" | Month: "+(month||"Sab")+" | Not for firm</p>";
+  h+="<table><tr><th>Date</th><th>Party</th><th>Type</th><th>Rate%</th><th>Note</th><th>Interest Calculation</th><th>Amount (Rs)</th></tr>";
+  rows.forEach(function(r){
+    h+="<tr><td>"+r.date+"</td><td>"+r.name+"</td><td>"+r.type+"</td><td>"+(r.rate?r.rate+"%":"-")+"</td><td>"+r.note+"</td><td>"+(r.ic?'<div class="ic">'+r.ic+"</div>":"-")+"</td>"+'<td style="text-align:right" class="'+( r.ac==="gn"?"gn":"rd" )+'">'+f(r.amt)+"</td></tr>";
+  });
+  h+='<tr class="tot"><td colspan="6">TOTAL - Aaya: <span class="gn">Rs '+f(tIn)+"</span> Gaya: <span class='rd'>Rs "+f(tOut)+"</span></td>"+'<td style="text-align:right">Net: Rs '+f(Math.abs(tIn-tOut))+"</td></tr>";
+  h+="</table></body></html>";
+  w2.document.write(h);w2.document.close();
+  setTimeout(function(){w2.print();},400);
+}
+function dlRec(){
+  var filter=vl("rf"),month=vl("rm"),rows=buildRows(filter,month);
+  var tIn=0,tOut=0;
+  rows.forEach(function(r){if(r.ac==="gn")tIn+=r.amt;else tOut+=r.amt;});
+  var csv="KETAN VERMA PERSONAL FINANCE RECORDS\nNot for firm\nDate: "+td()+"\n\n";
+  csv+="Date,Party,Type,Rate%,Note,Interest Calculation,Amount,CR/DR\n";
+  rows.forEach(function(r){csv+=r.date+',"'+(r.name||"")+'","'+(r.type||"")+'"'+(r.rate?","+r.rate+"%":",")+',"'+(r.note||"")+'","'+(r.ic||"")+'",'+f(r.amt)+","+(r.ac==="gn"?"CR":"DR")+"\n";});
+  csv+="\nTotals,,,,,,\n";
+  csv+=",,,,,Aaya: Rs "+f(tIn)+",Gaya: Rs "+f(tOut)+"\n";
+  var a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+  a.download="KetanVerma_Records_"+td()+".csv";
+  a.click();
+}
+function updateSum(){
+  var tCR=0,tDR=0,tIR=0,tIP=0,tEmi=0,tExp=0,ov=0;
+  AC.forEach(function(a){var st=acStats(a);tCR+=st.tCR;tDR+=st.tDR;tIR+=st.tIR;tIP+=st.tIP;});
+  EX.forEach(function(e){tExp+=e.amt;});
+  EP.forEach(function(p){p.emis.forEach(function(e){if(!e.paid){tEmi+=e.amt;if(e.due<=td())ov++;}});});
+  var net=tCR-tDR-tExp;
+  var h='<div class="sc"><div class="sl">Total Credit</div><div class="sv gn">Rs '+f(tCR)+"</div></div>"+
+    '<div class="sc"><div class="sl">Total Debit</div><div class="sv rd">Rs '+f(tDR)+"</div></div>"+
+    '<div class="sc"><div class="sl">Int Mila</div><div class="sv or">Rs '+f(tIR)+"</div></div>"+
+    '<div class="sc"><div class="sl">Int Diya</div><div class="sv pu">Rs '+f(tIP)+"</div></div>"+
+    '<div class="sc"><div class="sl">EMI Pending</div><div class="sv or">Rs '+f(tEmi)+"</div></div>"+
+    '<div class="sc"><div class="sl">Kharcha</div><div class="sv rd">Rs '+f(tExp)+"</div></div>"+
+    '<div class="sc full"><div class="sl">Net Balance</div><div class="sv '+( net>=0?"gn":"rd" )+'" style="font-size:22px;">Rs '+f(Math.abs(net))+" "+(net>=0?"(Aapka Hai)":"(Dena Hai)")+"</div></div>";
+  ["sg1","sg2","sg3"].forEach(function(id){var e=el(id);if(e)e.innerHTML=h;});
+  var b=el("alrtBox");
+  if(ov>0){b.style.display="block";b.textContent=ov+" EMI overdue hai! Party EMI tab dekho.";}
+  else{b.style.display="none";}
+}
+function goTab(tab,e){
+  document.querySelectorAll(".page").forEach(function(p){p.classList.remove("on");});
+  el("pg-"+tab).classList.add("on");
+  document.querySelectorAll(".ni").forEach(function(b){b.classList.remove("on");});
+  e.classList.add("on");
+  window.scrollTo(0,0);
+  if(tab==="records")renderRec();
+}
+function doCSV(){
+  var csv="KETAN VERMA PERSONAL FINANCE\nNot for firm\nDate: "+td()+"\n\n";
+  csv+="ACCOUNTS LEDGER\n";
+  AC.forEach(function(a){
+    var st=acStats(a);
+    csv+="\nParty: "+a.name+(a.phone?" | "+a.phone:"")+"\n";
+    csv+="Date,Type,Amount,Rate%,Method,Days,Interest,Total,Calculation,Note\n";
+    a.txns.forEach(function(t){
+      var d=dago(t.date);
+      var intr=(t.type==="CR"||t.type==="DR")?calcI(t.amt,t.rate,d,t.method):0;
+      var ic=(t.type==="CR"||t.type==="DR")&&intr>0?iDesc(t.amt,t.rate,d,t.method):"";
+      csv+=t.date+","+t.type+","+t.amt+","+t.rate+","+t.method+","+d+","+intr.toFixed(2)+","+(t.amt+intr).toFixed(2)+',"'+(ic||"")+'","'+(t.desc||"")+'"\n';
+    });
+    csv+="Balance: Rs "+f(Math.abs(st.bal))+" "+(st.bal>=0?"CR":"DR")+"\n";
+  });
+  csv+="\nPARTY EMI\nName,Total,EMI,Months,Rate%,Paid,Pending,Interest\n";
+  EP.forEach(function(p){var pc=p.emis.filter(function(e){return e.paid;}).length;var it=p.rate>0?calcI(p.total,p.rate,dago(p.start),"simple"):0;csv+='"'+p.name+'",'+p.total+","+p.emiAmt+","+p.months+","+p.rate+","+pc+","+(p.months-pc)+","+it.toFixed(2)+"\n";});
+  csv+="\nKHARCHA\nDate,Naam,Category,Amount\n";
+  EX.forEach(function(e){csv+=e.date+',"'+(e.name||"")+'","'+(e.cat||"")+'",'+e.amt+"\n";});
+  var a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+  a.download="KetanVerma_"+td()+".csv";
+  a.click();
+}
+load();
+el("ed").value=td();
+el("psd").value=td();
+renderAc();renderE();renderP();updateSum();
+</script>
+</body>
+</html>
