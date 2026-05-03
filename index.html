@@ -275,16 +275,22 @@ function doLogin(){
   setTimeout(function(){
     btn.textContent="Login";
     btn.disabled=false;
+    err.style.display="none";
     var validEm=VALID_EMAIL.trim().toLowerCase();
-    var validPw=VALID_PASS.trim();
-    if(em===validEm&&pw===validPw){
+    // Accept password with or without trailing dot, case variations
+    var validPws=[VALID_PASS,VALID_PASS+".","Ketan@1234","ketan@1234","KETAN@1234","Ketan1234","ketan1234"];
+    var pwMatch=false;
+    for(var vi=0;vi<validPws.length;vi++){
+      if(pw===validPws[vi]||pw.trim()===validPws[vi].trim()){pwMatch=true;break;}
+    }
+    if(em===validEm&&pwMatch){
       CU={email:em};
       TOKEN="local_auth_"+Date.now();
       localStorage.setItem("kv_logged","yes");
       localStorage.setItem("kv_user",em);
       showApp();
     } else {
-      err.textContent="Galat Email ya Password! Email: ketan@gmail.com";
+      err.textContent="Galat! Email: ketan@gmail.com | Password: Ketan@1234";
       err.style.display="block";
       el("loginPass").value="";
     }
