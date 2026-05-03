@@ -6,9 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="theme-color" content="#5C4000"/>
 <title>Ketan Verma Finance</title>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
 <style>
 :root{--gold:#B8860B;--gold2:#DAA520;--gold3:#FFE87C;--gold4:#5C4000;--gold5:#3D2B00;--cream:#FFF8DC;--cream2:#FEF3C0;--cream3:#FFFDF5;--bg:#FBF6E9;--card:#FFFFFF;--border:#E8D5A3;--border2:#F0E4C0;--text:#2C1810;--t2:#6B4C2A;--t3:#9B7A50;--t4:#C8B898;--green:#1D7A4F;--gbg:#E8F5EE;--red:#C0392B;--rbg:#FDE8E6;--blue:#1A5276;--bbg:#EBF5FB;--shadow:0 2px 16px rgba(92,64,0,.12);--shadow2:0 1px 6px rgba(92,64,0,.08);}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
@@ -179,7 +177,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 <div class="r2"><div class="fg"><label>Party Naam *</label><input id="pn" placeholder="Naam"/></div>
 <div class="fg"><label>Phone</label><input id="pph" placeholder="Optional" type="tel" inputmode="tel"/></div></div>
 <div class="r2"><div class="fg"><label>Interest Rate (% p.a.)</label><input type="number" id="prate" value="0" inputmode="decimal" placeholder="Default rate"/></div>
-<div class="fg"><label>Method</label><select id="pmethod"><option value="simple">Simple</option><option value="compound">Compound</option></select></div></div>
+<div class="fg"><label>Method</label><select id="pmethod"><option value="simple">Simple</option><option value="compound12">Compound (Annual)</option><option value="compound6">Compound (6 Month)</option><option value="compound3">Compound (3 Month)</option></select></div></div>
 <div class="r2"><div class="fg"><label>Type</label><select id="ptype"><option value="given">Maine Diya (Lent)</option><option value="taken">Maine Liya (Borrowed)</option></select></div>
 <div class="fg"><label>Note</label><input id="pnote" placeholder="Optional"/></div></div>
 <div class="brow"><button class="btn gold" style="flex:1" onclick="addParty()">+ Party Banao</button><button class="btn" onclick="clrP()">Clear</button></div>
@@ -203,7 +201,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 <div id="eList"><div class="empty">Koi kharcha nahi.</div></div>
 </div>
 <div class="page" id="pg-records">
-<div class="flt no-print"><select id="rf" onchange="renderRec()"><option value="all">Sab Records</option><option value="CR">Credit</option><option value="DR">Debit</option><option value="EMI">EMI</option><option value="INT">Interest</option><option value="EXP">Kharche</option></select>
+<div class="flt no-print"><select id="rf" onchange="renderRec()"><option value="all">Sab Records</option><option value="CR">Credit</option><option value="DR">Debit</option><option value="EMI">EMI</option><option value="INT">Interest</option><option value="GOLD">Gold</option><option value="EXP">Kharche</option></select>
 <input type="month" id="rm" onchange="renderRec()"/></div>
 <div class="flt no-print"><button class="btn gn" style="flex:1;font-size:13px;" onclick="printRec()">Print Records</button><button class="btn bl" style="flex:1;font-size:13px;" onclick="dlRec()">Download CSV</button></div>
 <div id="recList"><div class="empty">Koi records nahi.</div></div>
@@ -215,12 +213,106 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 </div>
 </div><!-- /mainApp -->
 <script>
-var db=null,auth=null,ONLINE=false,CU=null;
-var firebaseConfig={apiKey:"AIzaSyCoJ1dv9_Nq_jX6BPi5gQv-V0dRotW4fvg",authDomain:"ketan-finance.firebaseapp.com",databaseURL:"https://ketan-finance-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"ketan-finance",storageBucket:"ketan-finance.firebasestorage.app",messagingSenderId:"937586481702",appId:"1:937586481702:web:6d907913e56e3aa359a4e7"};
-try{if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);db=firebase.database();auth=firebase.auth();
-db.ref(".info/connected").on("value",function(s){ONLINE=s.val()===true;var ind=el("syncInd");if(ind){ind.textContent=ONLINE?"Online":"Offline";ind.style.color=ONLINE?"#1D7A4F":"#C0392B";}});
-auth.onAuthStateChanged(function(u){if(u){CU=u;el("loginScreen").style.display="none";el("mainApp").style.display="block";el("ed").value=td();load();}else{CU=null;el("loginScreen").style.display="flex";el("mainApp").style.display="none";}});
-}catch(e){console.log("Firebase error:",e);}
+// Firebase REST API - No SDK needed!
+var DB_URL="https://ketan-finance-default-rtdb.asia-southeast1.firebasedatabase.app";
+var API_KEY="AIzaSyCoJ1dv9_Nq_jX6BPi5gQv-V0dRotW4fvg";
+var AUTH_URL="https://identitytoolkit.googleapis.com/v1/accounts";
+var TOKEN=null,ONLINE=false,CU=null,TOKEN_EXP=0;
+
+function getToken(){return TOKEN||localStorage.getItem("fb_token")||null;}
+
+function saveToken(t,exp){
+  TOKEN=t;TOKEN_EXP=Date.now()+(parseInt(exp||3600)-60)*1000;
+  localStorage.setItem("fb_token",t);
+  localStorage.setItem("fb_exp",TOKEN_EXP);
+}
+
+function isTokenValid(){
+  var exp=parseInt(localStorage.getItem("fb_exp")||0);
+  return getToken()&&Date.now()<exp;
+}
+
+function fbGET(path,cb){
+  var tok=getToken();
+  var url=DB_URL+"/"+path+".json"+(tok?"?auth="+tok:"");
+  fetch(url).then(function(r){return r.json();}).then(function(d){cb(null,d);}).catch(function(e){cb(e,null);});
+}
+
+function fbPUT(path,data,cb){
+  var tok=getToken();
+  if(!tok){if(cb)cb(new Error("No token"));return;}
+  var url=DB_URL+"/"+path+".json?auth="+tok;
+  fetch(url,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)})
+    .then(function(r){return r.json();}).then(function(d){ONLINE=true;setSync(true);if(cb)cb(null,d);})
+    .catch(function(e){if(cb)cb(e,null);});
+}
+
+function setSync(on){
+  ONLINE=on;
+  var ind=el("syncInd");
+  if(ind){ind.textContent=on?"Online":"Offline";ind.style.color=on?"#1D7A4F":"#C0392B";}
+}
+
+function doLogin(){
+  var em=el("loginEmail").value.trim(),pw=el("loginPass").value;
+  var btn=el("loginBtn"),err=el("loginErr");
+  err.style.display="none";
+  if(!em||!pw){err.textContent="Email aur Password dono likho!";err.style.display="block";return;}
+  btn.textContent="Login ho raha hai...";btn.disabled=true;
+  // Firebase Auth REST API
+  fetch(AUTH_URL+":signInWithPassword?key="+API_KEY,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({email:em,password:pw,returnSecureToken:true})
+  }).then(function(r){return r.json();}).then(function(d){
+    btn.textContent="Login";btn.disabled=false;
+    if(d.error){
+      var msg="Email ya Password galat hai!";
+      if(d.error.message==="TOO_MANY_ATTEMPTS_TRY_LATER")msg="Bahut zyada tries. Baad mein try karo.";
+      err.textContent=msg;err.style.display="block";
+      return;
+    }
+    saveToken(d.idToken,d.expiresIn);
+    CU={email:em,uid:d.localId};
+    localStorage.setItem("fb_user",JSON.stringify(CU));
+    showApp();
+  }).catch(function(e){
+    btn.textContent="Login";btn.disabled=false;
+    err.textContent="Network error. Check internet connection.";err.style.display="block";
+  });
+}
+
+function doLogout(){
+  TOKEN=null;CU=null;
+  localStorage.removeItem("fb_token");
+  localStorage.removeItem("fb_exp");
+  localStorage.removeItem("fb_user");
+  el("loginScreen").style.display="flex";
+  el("mainApp").style.display="none";
+}
+
+function togglePass(){var i=el("loginPass");i.type=i.type==="password"?"text":"password";}
+
+function showApp(){
+  el("loginScreen").style.display="none";
+  el("mainApp").style.display="block";
+  el("ed").value=td();
+  setSync(true);
+  load();
+}
+
+// Check if already logged in on page load
+window.addEventListener("load",function(){
+  var savedUser=localStorage.getItem("fb_user");
+  if(isTokenValid()&&savedUser){
+    try{CU=JSON.parse(savedUser);}catch(e){}
+    TOKEN=getToken();
+    showApp();
+  } else {
+    el("loginScreen").style.display="flex";
+    el("mainApp").style.display="none";
+  }
+});
 function togglePass(){var i=el("loginPass");i.type=i.type==="password"?"text":"password";}
 function doLogin(){var em=el("loginEmail").value.trim(),pw=el("loginPass").value,btn=el("loginBtn"),err=el("loginErr");err.style.display="none";if(!em||!pw){err.textContent="Email aur Password dono likho!";err.style.display="block";return;}btn.textContent="Login ho raha hai...";btn.disabled=true;auth.signInWithEmailAndPassword(em,pw).then(function(){btn.textContent="Login";btn.disabled=false;}).catch(function(e){btn.textContent="Login";btn.disabled=false;var m="Email ya Password galat hai!";if(e.code==="auth/too-many-requests")m="Bahut zyada tries. Baad mein try karo.";err.textContent=m;err.style.display="block";});}
 function doLogout(){if(auth)auth.signOut();}
@@ -234,36 +326,44 @@ function dago(s){var a=new Date(s),b=new Date();b.setHours(0,0,0,0);a.setHours(0
 function calcI(amt,rate,days,method){if(!rate||days<=0)return 0;var r=rate/100;if(method==="compound")return amt*(Math.pow(1+r/365,days)-1);return amt*r*days/365;}
 function iDesc(amt,rate,days,method){if(!rate||days<=0)return "";var i=calcI(amt,rate,days,method);if(method==="compound")return "Rs "+f(amt)+" x [(1+"+rate+"%/365)^"+days+"d - 1] = Rs "+f(i);return "Rs "+f(amt)+" x "+rate+"% x "+days+"d / 365 = Rs "+f(i);}
 function load(){
-  // Show loading state
   var pl=el("partyList");
-  if(pl)pl.innerHTML='<div class="empty">Data load ho raha hai...</div>';
-  if(!db){loadLocal();renderAll();return;}
-  db.ref("kv8").once("value").then(function(snap){
-    var d=snap.val();
-    if(d&&(d.p||d.ex)){
+  if(pl)pl.innerHTML='<div class="empty">&#8987; Data load ho raha hai...</div>';
+  if(!isTokenValid()){loadLocal();if(P.length===0)seedDataIfEmpty();renderAll();return;}
+
+  // Use REST API to load from Firebase
+  fbGET("kv8",function(err,d){
+    if(!err&&d&&d.p&&Array.isArray(d.p)&&d.p.length>0){
       P=fixP(d.p||[]);
       EX=fixEx(d.ex||[]);
-      // Save to local as backup
       try{localStorage.setItem("kv8_p",JSON.stringify(P));localStorage.setItem("kv8_ex",JSON.stringify(EX));}catch(e){}
+      setSync(true);
+      renderAll();
     } else {
-      // Firebase empty - try local
+      // Firebase empty or error - try local
       loadLocal();
-      // If local has data, push to Firebase
-      if(P.length||EX.length)fbSave();
+      if(P.length||EX.length){
+        fbSave();
+      } else {
+        seedDataIfEmpty();
+      }
+      renderAll();
     }
-    renderAll();
-  }).catch(function(e){
-    console.log("Firebase load error:",e);
-    loadLocal();
-    renderAll();
   });
 }
 function loadLocal(){
   try{var d=localStorage.getItem("kv8_p");if(d){var x=JSON.parse(d);if(Array.isArray(x))P=fixP(x);}}catch(e){}
   try{var d=localStorage.getItem("kv8_ex");if(d){var x=JSON.parse(d);if(Array.isArray(x))EX=fixEx(x);}}catch(e){}
 }
-function fbSave(){try{if(db)db.ref("kv8").set({p:P,ex:EX});}catch(e){}}
-function save(){fbSave();try{localStorage.setItem("kv8_p",JSON.stringify(P));localStorage.setItem("kv8_ex",JSON.stringify(EX));}catch(e){}}
+function fbSave(){
+  fbPUT("kv8",{p:P,ex:EX},function(err){
+    if(err){console.log("Save error:",err.message);setSync(false);}
+    else{setSync(true);}
+  });
+}
+function save(){
+  fbSave();
+  try{localStorage.setItem("kv8_p",JSON.stringify(P));localStorage.setItem("kv8_ex",JSON.stringify(EX));}catch(e){}
+}
 function renderAll(){renderParties();renderExp();updateSum();}
 function fixP(arr){
   if(!Array.isArray(arr))return[];
@@ -284,6 +384,22 @@ function fixP(arr){
     return p;
   });
 }
+// SEEDED DATA from CSV backup
+var SEED_DATA = {"p": [{"id": 1000000, "name": "BALVINDER RAVAL", "phone": "", "rate": 15.0, "method": "simple", "ptype": "taken", "note": "", "txns": [{"id": 1000001, "date": "2025-04-20", "type": "CR", "amt": 1200000.0, "desc": "", "rate": 15.0, "method": "simple"}, {"id": 1000002, "date": "2025-12-05", "type": "INT_PAID", "amt": 46100.0, "desc": "48000-1900 march bal.", "rate": 15.0, "method": "simple"}, {"id": 1000003, "date": "2026-04-20", "type": "INT_PAID", "amt": 121000.0, "desc": "242 silver rate 500gm booked", "rate": 15.0, "method": "simple"}], "open": false}, {"id": 1001000, "name": "MUKESH GOEL", "phone": "", "rate": 12.0, "method": "simple", "ptype": "given", "note": "", "txns": [{"id": 1001001, "date": "2023-07-01", "type": "DR", "amt": 1472000.0, "desc": "", "rate": 12.0, "method": "compound"}, {"id": 1001002, "date": "2024-05-20", "type": "DR", "amt": 500000.0, "desc": "Raval uncle", "rate": 15.0, "method": "compound"}, {"id": 1001003, "date": "2024-07-20", "type": "DR", "amt": 1000000.0, "desc": "Amit", "rate": 18.0, "method": "compound"}, {"id": 1001004, "date": "2024-09-01", "type": "INT_RECV", "amt": 3000.0, "desc": "Raval uncle", "rate": 15.0, "method": "simple"}, {"id": 1001005, "date": "2025-10-20", "type": "DR", "amt": 100000.0, "desc": "Raval unce interest", "rate": 15.0, "method": "compound"}, {"id": 1001006, "date": "2025-10-20", "type": "DR", "amt": 225000.0, "desc": "Amit intrest", "rate": 18.0, "method": "compound"}, {"id": 1001007, "date": "2025-11-01", "type": "CR", "amt": 700000.0, "desc": "Kholi", "rate": 12.0, "method": "compound"}, {"id": 1001008, "date": "2026-05-03", "type": "CR", "amt": 700000.0, "desc": "Koli", "rate": 12.0, "method": "compound"}, {"id": 1001009, "date": "2026-05-03", "type": "DR", "amt": 2153673.0, "desc": "Auto loan", "rate": 15.65, "method": "simple"}], "open": false}, {"id": 1002000, "name": "MAYANK GOEL", "phone": "", "rate": 12.0, "method": "simple", "ptype": "given", "note": "", "txns": [{"id": 1002001, "date": "2023-06-28", "type": "DR", "amt": 1300000.0, "desc": "", "rate": 12.0, "method": "compound"}], "open": false}], "ex": []};
+
+function seedDataIfEmpty(){
+  // Only seed if both P and EX are empty
+  if(P.length===0&&EX.length===0){
+    console.log("Seeding data from CSV backup...");
+    P=fixP(SEED_DATA.p||[]);
+    EX=fixEx(SEED_DATA.ex||[]);
+    if(P.length>0){
+      fbSave();
+      console.log("Seed data pushed to Firebase!");
+    }
+  }
+}
+
 function fixEx(arr){if(!Array.isArray(arr))return[];return arr.filter(Boolean).map(function(e){if(!e.amt)e.amt=0;if(!e.date)e.date=td();return e;});}
 function addParty(){
   var nm=v("pn").trim(),ph=v("pph").trim(),rate=parseFloat(v("prate"))||0,method=v("pmethod"),ptype=v("ptype"),note=v("pnote").trim();
@@ -299,7 +415,13 @@ function addTxn(pid){
   var date=v("td_"+pid),type=v("tt_"+pid),amt=parseFloat(v("ta_"+pid)),desc=v("tdesc_"+pid).trim();
   var rate=parseFloat(v("tr_"+pid))||0,method=v("tm_"+pid);
   if(!date||isNaN(amt)||amt<=0){alert("Date aur Amount zaroori hai!");return;}
-  p.txns.push({id:Date.now(),date:date,type:type,amt:amt,desc:desc,rate:rate,method:method});
+  var txn={id:Date.now(),date:date,type:type,amt:amt,desc:desc,rate:rate,method:method};
+  // For gold types, amt = grams
+  if(type==="GOLD_IN"||type==="GOLD_OUT"||type==="GOLD_INT"){
+    txn.grams=amt;
+    txn.amt=0; // cash amount is 0 for gold entries
+  }
+  p.txns.push(txn);
   p.txns.sort(function(a,b){return new Date(a.date)-new Date(b.date);});
   save();renderParties();updateSum();
   el("ta_"+pid).value="";el("tdesc_"+pid).value="";el("td_"+pid).value=td();el("tr_"+pid).value=p.rate||"0";
@@ -329,8 +451,18 @@ function saveTxn(pid,tid){
   p.txns.sort(function(a,b){return new Date(a.date)-new Date(b.date);});
   save();renderParties();updateSum();
 }
+function calcGoldInt(grams,rate,days){
+  // Gold interest in grams: principal_grams * rate/100 * days/365
+  if(!rate||!grams||days<=0)return 0;
+  return grams*(rate/100)*(days/365);
+}
+function goldIntDesc(grams,rate,days){
+  var gi=calcGoldInt(grams,rate,days);
+  return grams+"gm x "+rate+"% x "+days+"d / 365 = "+gi.toFixed(3)+"gm";
+}
 function pStats(p){
   var tCR=0,tDR=0,tIR=0,tIP=0,bal=0;
+  var goldIn=0,goldOut=0,goldBal=0,goldInt=0;
   p.txns.forEach(function(t){
     var d=dago(t.date);
     var intr=(t.type==="CR"||t.type==="DR")?calcI(t.amt,t.rate,d,t.method):0;
@@ -340,8 +472,11 @@ function pStats(p){
     else if(t.type==="EMI"){tCR+=t.amt;bal+=t.amt;}
     else if(t.type==="INT_RECV"){tIR+=t.amt;bal+=t.amt;tCR+=t.amt;}
     else if(t.type==="INT_PAID"){tIP+=t.amt;bal-=t.amt;tDR+=t.amt;}
+    else if(t.type==="GOLD_IN"){goldIn+=(t.grams||t.amt);goldBal+=(t.grams||t.amt);}
+    else if(t.type==="GOLD_OUT"){goldOut+=(t.grams||t.amt);goldBal-=(t.grams||t.amt);}
+    else if(t.type==="GOLD_INT"){goldInt+=(t.grams||t.amt);goldBal+=(t.grams||t.amt);}
   });
-  return{tCR:tCR,tDR:tDR,tIR:tIR,tIP:tIP,bal:bal};
+  return{tCR:tCR,tDR:tDR,tIR:tIR,tIP:tIP,bal:bal,goldIn:goldIn,goldOut:goldOut,goldBal:goldBal,goldInt:goldInt};
 }
 function renderParties(){
   var c=el("partyList");
@@ -355,21 +490,41 @@ function renderParties(){
     var lb=p.ptype==="given"?'<span class="bdg b-cr">Maine Diya</span>':'<span class="bdg b-dr">Maine Liya</span>';
 
     // BUILD PASSBOOK TABLE
-    var runBal=0;
+    var runBal=0;var goldRunBal=0;
     var pbRows="";
     if(p.txns.length){
-      pbRows+='<tr><th>Date</th><th>Type</th><th>Vivaran</th><th>Rate</th><th>Interest Calc.</th><th style="text-align:right">Credit</th><th style="text-align:right">Debit</th><th style="text-align:right">Balance</th><th class="no-print"></th></tr>';
+      var hasGoldTxn=p.txns.some(function(t){return t.type==="GOLD_IN"||t.type==="GOLD_OUT"||t.type==="GOLD_INT";});
+      pbRows+='<tr><th>Date</th><th>Type</th><th>Vivaran</th><th>Rate</th><th>Interest / Gold Calc.</th><th style="text-align:right">Cash CR (Rs)</th><th style="text-align:right">Cash DR (Rs)</th><th style="text-align:right">Cash Bal</th>'+(hasGoldTxn?'<th style="text-align:right;color:#FFE87C;">Gold CR (gm)</th><th style="text-align:right;color:#FFE87C;">Gold DR (gm)</th><th style="text-align:right;color:#FFE87C;">Gold Bal (gm)</th>':'')+'<th class="no-print"></th></tr>';
       p.txns.forEach(function(t){
         var d=dago(t.date);
         var intr=(t.type==="CR"||t.type==="DR")?calcI(t.amt,t.rate,d,t.method):0;
         var tot=t.amt+intr;
         var crA="",drA="",tLabel="",rShow="-";
-        if(t.type==="CR"){runBal+=tot;crA=f(tot);tLabel='<span class="bdg b-cr">CR</span>';rShow=t.rate>0?t.rate+"%":"-";}
-        else if(t.type==="DR"){runBal-=tot;drA=f(tot);tLabel='<span class="bdg b-dr">DR</span>';rShow=t.rate>0?t.rate+"%":"-";}
+        var gCrA="",gDrA="";
+        var mLabel=t.method==="compound6"?"CI-6M":t.method==="compound3"?"CI-3M":t.method==="compound12"||t.method==="compound"?"CI-Ann":"SI";
+        if(t.type==="CR"){runBal+=tot;crA=f(tot);tLabel='<span class="bdg b-cr">Cash CR</span>';rShow=t.rate>0?t.rate+"% "+mLabel:"-";}
+        else if(t.type==="DR"){runBal-=tot;drA=f(tot);tLabel='<span class="bdg b-dr">Cash DR</span>';rShow=t.rate>0?t.rate+"% "+mLabel:"-";}
         else if(t.type==="EMI"){runBal+=t.amt;crA=f(t.amt);tLabel='<span class="bdg b-pd">EMI</span>';}
         else if(t.type==="INT_RECV"){runBal+=t.amt;crA=f(t.amt);tLabel='<span class="bdg b-ir">Int Mila</span>';}
         else if(t.type==="INT_PAID"){runBal-=t.amt;drA=f(t.amt);tLabel='<span class="bdg b-ip">Int Diya</span>';}
-        var ic=intr>0?'<div class="td-ic">'+iDesc(t.amt,t.rate,d,t.method)+"</div>":"";
+        else if(t.type==="GOLD_IN"){
+          var gm=t.grams||t.amt;goldRunBal+=gm;gCrA=f(gm)+"gm";
+          tLabel='<span class="bdg" style="background:var(--cream2);color:var(--gold4);">&#127817;Gold In</span>';
+          rShow=t.rate>0?t.rate+"%":"-";
+          var gi=calcGoldInt(gm,t.rate,d);
+          ic=gm>0?'<div class="td-ic">'+goldIntDesc(gm,t.rate,d)+'</div>':"";
+        }
+        else if(t.type==="GOLD_OUT"){
+          var gm=t.grams||t.amt;goldRunBal-=gm;gDrA=f(gm)+"gm";
+          tLabel='<span class="bdg" style="background:var(--rbg);color:var(--red);">&#127817;Gold Out</span>';
+        }
+        else if(t.type==="GOLD_INT"){
+          var gm=t.grams||t.amt;goldRunBal+=gm;gCrA=f(gm)+"gm";
+          tLabel='<span class="bdg" style="background:var(--cream);color:var(--gold4);">&#127817;Gold Int</span>';
+          rShow=t.rate>0?t.rate+"%":"-";
+          ic=gm>0?'<div class="td-ic" style="color:var(--gold)">Gold Int: '+f(gm)+"gm received</div>":"";
+        }
+        var ic=ic||(intr>0?'<div class="td-ic">'+iDesc(t.amt,t.rate,d,t.method)+"</div>":"");
         var bc=runBal>=0?"gn":"rd";
         // EDIT MODE for this transaction
         if(t.editing){
@@ -391,7 +546,8 @@ function renderParties(){
             '<button class="btn sm" onclick="editTxn('+p.id+','+t.id+')" style="margin-top:4px">Cancel</button>'+
             "</td></tr>";
         } else {
-          pbRows+='<tr><td style="white-space:nowrap;font-size:11px;color:var(--t2);">'+t.date+"</td><td>"+tLabel+"</td>"+'<td style="font-size:12px;">'+( t.desc||"-" )+ic+"</td><td style='font-size:11px;color:var(--gold);'>"+rShow+"</td>"+'<td style="font-size:11px;color:var(--t3);">'+( ic?"":"-" )+"</td>"+'<td class="td-cr">'+( crA?"Rs "+crA:"" )+"</td>"+'<td class="td-dr">'+( drA?"Rs "+drA:"" )+"</td>"+'<td class="td-bal '+bc+'">Rs '+f(Math.abs(runBal))+"<br/><span style='font-size:9px;color:var(--t4);'>"+(runBal>=0?"CR":"DR")+"</span></td>"+'<td class="no-print" style="white-space:nowrap;">'+'<button class="btn sm or" onclick="editTxn('+p.id+','+t.id+')">Edit</button> '+'<button class="btn sm rd" onclick="delTxn('+p.id+','+t.id+')">Del</button>'+'</td></tr>';
+          var goldCols=hasGoldTxn?('<td class="td-cr" style="color:var(--gold);">'+( gCrA||"" )+"</td>"+'<td class="td-dr" style="color:var(--red);">'+( gDrA||"" )+"</td>"+'<td style="text-align:right;font-weight:700;color:var(--gold);font-size:12px;">'+( (gCrA||gDrA)?f(Math.abs(goldRunBal))+"gm":"" )+"</td>"):"";
+          pbRows+='<tr><td style="white-space:nowrap;font-size:11px;color:var(--t2);">'+t.date+"</td><td>"+tLabel+"</td>"+'<td style="font-size:12px;">'+( t.desc||"-" )+ic+"</td><td style='font-size:11px;color:var(--gold);'>"+rShow+"</td>"+'<td style="font-size:11px;color:var(--t3);">'+( ic?"":" - " )+"</td>"+'<td class="td-cr">'+( crA?"Rs "+crA:"" )+"</td>"+'<td class="td-dr">'+( drA?"Rs "+drA:"" )+"</td>"+'<td class="td-bal '+bc+'">Rs '+f(Math.abs(runBal))+"<br/><span style='font-size:9px;color:var(--t4);'>"+(runBal>=0?"CR":"DR")+"</span></td>"+goldCols+'<td class="no-print" style="white-space:nowrap;">'+'<button class="btn sm or" onclick="editTxn('+p.id+','+t.id+')">Edit</button> '+'<button class="btn sm rd" onclick="delTxn('+p.id+','+t.id+')">Del</button>'+'</td></tr>';
         }
       });
     }
@@ -401,11 +557,18 @@ function renderParties(){
     if(p.open){
       body+='<div class="pbdy">';
       // STATS
-      body+='<div class="pstats">';
-      body+='<div class="pst"><div class="pst-l">Credit</div><div class="pst-v gn">Rs '+f(st.tCR)+"</div></div>";
-      body+='<div class="pst"><div class="pst-l">Debit</div><div class="pst-v rd">Rs '+f(st.tDR)+"</div></div>";
+      // Show gold stats only if any gold transaction exists
+      var hasGold=p.txns.some(function(t){return t.type==="GOLD_IN"||t.type==="GOLD_OUT"||t.type==="GOLD_INT";});
+      var statCols=hasGold?6:4;
+      body+='<div class="pstats" style="grid-template-columns:repeat('+statCols+',1fr);">';
+      body+='<div class="pst"><div class="pst-l">Cash CR</div><div class="pst-v gn">Rs '+f(st.tCR)+"</div></div>";
+      body+='<div class="pst"><div class="pst-l">Cash DR</div><div class="pst-v rd">Rs '+f(st.tDR)+"</div></div>";
       body+='<div class="pst"><div class="pst-l">Int Mila</div><div class="pst-v or">Rs '+f(st.tIR)+"</div></div>";
       body+='<div class="pst"><div class="pst-l">Int Diya</div><div class="pst-v" style="color:#6C3483;">Rs '+f(st.tIP)+"</div></div>";
+      if(hasGold){
+        body+='<div class="pst" style="background:var(--cream2)"><div class="pst-l" style="color:var(--gold4)">&#127817;Gold Mila</div><div class="pst-v or">'+f(st.goldIn)+"gm</div></div>";
+        body+='<div class="pst" style="background:var(--cream2)"><div class="pst-l" style="color:var(--gold4)">&#127817;Gold Bal.</div><div class="pst-v '+(st.goldBal>=0?"or":"rd")+'">'+f(st.goldBal)+"gm</div></div>";
+      }
       body+="</div>";
 
       // ADD TRANSACTION FORM
@@ -419,11 +582,14 @@ function renderParties(){
       body+="</div>";
       body+='<div class="add-row">';
       body+='<select id="tt_'+p.id+'" style="font-size:13px;min-height:38px;padding:5px 7px;">';
-      body+='<option value="CR">Credit (Mila / Diya Tha)</option>';
-      body+='<option value="DR">Debit (Diya / Liya Tha)</option>';
-      body+='<option value="EMI">EMI Mili (Payment In)</option>';
-      body+='<option value="INT_RECV">Interest Mila (Received)</option>';
-      body+='<option value="INT_PAID">Interest Diya (Paid)</option>';
+      body+='<option value="CR">Cash Credit (Mila)</option>';
+      body+='<option value="DR">Cash Debit (Diya)</option>';
+      body+='<option value="EMI">EMI Mili</option>';
+      body+='<option value="INT_RECV">Interest Mila (Cash)</option>';
+      body+='<option value="INT_PAID">Interest Diya (Cash)</option>';
+      body+='<option value="GOLD_IN">Gold Mila (gm mein)</option>';
+      body+='<option value="GOLD_OUT">Gold Diya (gm mein)</option>';
+      body+='<option value="GOLD_INT">Gold Interest (gm mein)</option>';
       body+="</select>";
       body+='<select id="tm_'+p.id+'" style="font-size:13px;min-height:38px;padding:5px 7px;width:100px;">';
       body+='<option value="simple">Simple</option><option value="compound">Compound</option>';
@@ -467,16 +633,22 @@ function buildRows(filter,month){
     p.txns.forEach(function(t){
       var tf=t.type;
       if(tf==="INT_RECV"||tf==="INT_PAID")tf="INT";
+      if(tf==="GOLD_IN"||tf==="GOLD_OUT"||tf==="GOLD_INT")tf="GOLD";
       if(filter!=="all"&&filter!==t.type&&filter!==tf)return;
       if(filter==="EXP")return;
       if(month&&!t.date.startsWith(month))return;
       var d=dago(t.date);
       var intr=(t.type==="CR"||t.type==="DR")?calcI(t.amt,t.rate,d,t.method):0;
       var ic=intr>0?iDesc(t.amt,t.rate,d,t.method):"";
-      var bc=t.type==="CR"||t.type==="EMI"||t.type==="INT_RECV"?"b-cr":"b-dr";
-      var ac=t.type==="CR"||t.type==="EMI"||t.type==="INT_RECV"?"gn":"rd";
-      var tl=t.type==="INT_RECV"?"Int Mila":t.type==="INT_PAID"?"Int Diya":t.type==="EMI"?"EMI Mili":t.type;
-      rows.push({date:t.date,type:tl,name:p.name,amt:t.amt+intr,ic:ic,note:t.desc||"",bc:bc,ac:ac,rate:t.rate});
+    var mLabel=t.method==="compound6"?"CI-6Month":t.method==="compound3"?"CI-3Month":t.method==="compound12"||t.method==="compound"?"CI-Annual":"Simple";
+      var isGold=t.type==="GOLD_IN"||t.type==="GOLD_OUT"||t.type==="GOLD_INT";
+      var bc=t.type==="CR"||t.type==="EMI"||t.type==="INT_RECV"||t.type==="GOLD_IN"||t.type==="GOLD_INT"?"b-cr":"b-dr";
+      var ac=t.type==="CR"||t.type==="EMI"||t.type==="INT_RECV"||t.type==="GOLD_IN"||t.type==="GOLD_INT"?"gn":"rd";
+      var tl=t.type==="INT_RECV"?"Int Mila":t.type==="INT_PAID"?"Int Diya":t.type==="EMI"?"EMI Mili":t.type==="GOLD_IN"?"Gold In":t.type==="GOLD_OUT"?"Gold Out":t.type==="GOLD_INT"?"Gold Int":t.type;
+      var dispAmt=isGold?(t.grams||t.amt):t.amt+intr;
+      var dispUnit=isGold?"gm":"Rs";
+      if(isGold&&t.rate>0)ic=goldIntDesc(t.grams||t.amt,t.rate,d);
+      rows.push({date:t.date,type:tl,name:p.name,amt:dispAmt,unit:dispUnit,ic:ic,note:t.desc||"",bc:bc,ac:ac,rate:t.rate});
     });
   });
   if(filter==="all"||filter==="EXP"){EX.forEach(function(e){if(month&&!e.date.startsWith(month))return;rows.push({date:e.date,type:"EXP",name:e.name,amt:e.amt,ic:"",note:(e.cat||"")+(e.note?" - "+e.note:""),bc:"b-ex",ac:"rd",rate:0});});}
@@ -510,7 +682,7 @@ function printPartyLedger(pid){
     else if(t.type==="INT_RECV"){runBal+=t.amt;crA=f(t.amt);tl="Interest Mila";}
     else if(t.type==="INT_PAID"){runBal-=t.amt;drA=f(t.amt);tl="Interest Diya";}
     var ic=intr>0?iDesc(t.amt,t.rate,d,t.method):"";
-    rows+="<tr><td>"+t.date+"</td><td>"+tl+"</td><td>"+(t.desc||"-")+"</td><td>"+(t.rate>0?t.rate+"%":"-")+"</td><td style='font-size:10px;color:#9B7A50;'>"+(ic||"-")+"</td><td style='text-align:right;color:#1D7A4F;font-weight:700;'>"+(crA?"Rs "+crA:"")+"</td><td style='text-align:right;color:#C0392B;font-weight:700;'>"+(drA?"Rs "+drA:"")+"</td><td style='text-align:right;font-weight:700;color:"+(runBal>=0?"#1D7A4F":"#C0392B")+"'>Rs "+f(Math.abs(runBal))+" "+(runBal>=0?"CR":"DR")+"</td></tr>";
+    rows+="<tr><td>"+t.date+"</td><td>"+tl+"</td><td>"+(t.desc||"-")+"</td><td>"+(t.rate>0?t.rate+"% "+mLabel:"-")+"</td><td style='font-size:10px;color:#9B7A50;'>"+(ic||"-")+"</td><td style='text-align:right;color:#1D7A4F;font-weight:700;'>"+(crA?"Rs "+crA:"")+"</td><td style='text-align:right;color:#C0392B;font-weight:700;'>"+(drA?"Rs "+drA:"")+"</td><td style='text-align:right;font-weight:700;color:"+(runBal>=0?"#1D7A4F":"#C0392B")+"'>Rs "+f(Math.abs(runBal))+" "+(runBal>=0?"CR":"DR")+"</td></tr>";
   });
   var h="<!DOCTYPE html><html><head><meta charset='UTF-8'/><title>Ledger - "+p.name+"</title>";
   h+="<style>*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:12px;margin:0;padding:16px;color:#111;}";
