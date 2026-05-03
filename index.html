@@ -673,7 +673,11 @@ function renderAc(){
       body+='<div><div style="font-size:14px;font-weight:700;">Net Balance: <span class="'+( st.bal>=0?"gn":"rd" )+'">Rs '+f(Math.abs(st.bal))+' '+( st.bal>=0?"(CR)":"(DR)" )+"</span></div>";
       if(st.tIR>0||st.tIP>0)body+='<div style="font-size:11px;color:#888;margin-top:2px;">Int Mila: Rs '+f(st.tIR)+' | Int Diya: Rs '+f(st.tIP)+"</div>";
       body+="</div>";
-      body+='<button class="btn sm rd no-print" onclick="delAc('+a.id+')">Delete</button>';
+      body+='<div style="display:flex;gap:6px;" class="no-print">';
+      body+='<button class="btn sm" style="background:#FFF8DC;border-color:#E8D5A3;color:#B8860B;" onclick="printLedger('+a.id+')">Print</button>';
+      body+='<button class="btn sm bl" onclick="csvLedger('+a.id+')">CSV</button>';
+      body+='<button class="btn sm rd" onclick="delAc('+a.id+')">Delete</button>';
+      body+='</div>';
       body+="</div>";
       body+="</div>";
     }
@@ -702,6 +706,56 @@ function addParty(){
 function clrP(){["pn","pph","pt","pe","pm","pnote"].forEach(function(id){el(id).value="";});el("psd").value=td();el("prate").value="0";}
 function delParty(id){if(!confirm("Party delete karo?"))return;EP=EP.filter(function(x){return x.id!==id;});save();renderP();updateSum();}
 function togP(id){var p=EP.find(function(x){return x.id===id;});if(p)p.open=!p.open;save();renderP();}
+
+function editP(id){
+  var p=EP.find(function(x){return x.id===id;});
+  if(!p)return;
+  p.editing=!p.editing;
+  p.open=true;
+  save();renderP();
+}
+
+function saveEditP(id){
+  var p=EP.find(function(x){return x.id===id;});
+  if(!p)return;
+  var nm=el("ep-name-"+id).value.trim();
+  var ph=el("ep-phone-"+id).value.trim();
+  var tot=parseFloat(el("ep-total-"+id).value);
+  var ea=parseFloat(el("ep-emi-"+id).value);
+  var rt=parseFloat(el("ep-rate-"+id).value)||0;
+  var sd=el("ep-start-"+id).value;
+  var pt=el("ep-ptype-"+id).value;
+  var no=el("ep-note-"+id).value.trim();
+  if(!nm||isNaN(tot)||tot<=0||isNaN(ea)||ea<=0){alert("Naam, Total, EMI zaroori hai!");return;}
+  p.name=nm;p.phone=ph;p.total=tot;p.emiAmt=ea;p.rate=rt;p.start=sd;p.ptype=pt;p.note=no;
+  // Update all unpaid EMI amounts
+  p.emis.forEach(function(e){if(!e.paid)e.amt=ea;});
+  p.editing=false;
+  save();renderP();updateSum();
+}
+
+function editEmi(pid,no){
+  var p=EP.find(function(x){return x.id===pid;});
+  if(!p)return;
+  var e=p.emis.find(function(x){return x.no===no;});
+  if(!e)return;
+  e.editing=!e.editing;
+  save();renderP();
+}
+
+function saveEmi(pid,no){
+  var p=EP.find(function(x){return x.id===pid;});
+  if(!p)return;
+  var e=p.emis.find(function(x){return x.no===no;});
+  if(!e)return;
+  var newAmt=parseFloat(el("emi-amt-"+pid+"-"+no).value);
+  var newDue=el("emi-due-"+pid+"-"+no).value;
+  if(isNaN(newAmt)||newAmt<=0){alert("Amount sahi likho!");return;}
+  e.amt=newAmt;
+  if(newDue)e.due=newDue;
+  e.editing=false;
+  save();renderP();updateSum();
+}
 function markEmi(pid,no,paid){
   var p=EP.find(function(x){return x.id===pid;});if(!p)return;
   var e=p.emis.find(function(x){return x.no===no;});if(!e)return;
@@ -721,13 +775,58 @@ function renderP(){
     var body="";
     if(p.open){
       var ic=p.rate>0?'<div style="background:#FFF8F0;padding:8px 12px;font-size:11px;color:#BA7517;border-bottom:1px solid #eee;">Interest: '+iDesc(p.total,p.rate,dago(p.start),"simple")+"</div>":"";
+
+      // EDIT PARTY FORM
+      var editForm="";
+      if(p.editing){
+        editForm='<div style="background:#FFF8DC;border-bottom:1px solid #E8D5A3;padding:12px 14px;">'+
+          '<div style="font-size:12px;font-weight:700;color:#B8860B;margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em;">Party Details Edit Karo</div>'+
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">'+
+            '<div><label style="font-size:11px;font-weight:700;color:#6B4C2A;display:block;margin-bottom:4px;">Party Naam</label><input id="ep-name-'+p.id+'" value="'+p.name+'" style="width:100%;background:#fff;border:1.5px solid #E8D5A3;border-radius:8px;padding:8px;font-size:14px;min-height:40px;font-family:inherit;"/></div>'+
+            '<div><label style="font-size:11px;font-weight:700;color:#6B4C2A;display:block;margin-bottom:4px;">Phone</label><input id="ep-phone-'+p.id+'" value="'+( p.phone||"" )+'" style="width:100%;background:#fff;border:1.5px solid #E8D5A3;border-radius:8px;padding:8px;font-size:14px;min-height:40px;font-family:inherit;" type="tel"/></div>'+
+          '</div>'+
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">'+
+            '<div><label style="font-size:11px;font-weight:700;color:#6B4C2A;display:block;margin-bottom:4px;">Total Amount (Rs)</label><input type="number" id="ep-total-'+p.id+'" value="'+p.total+'" style="width:100%;background:#fff;border:1.5px solid #E8D5A3;border-radius:8px;padding:8px;font-size:14px;min-height:40px;font-family:inherit;" inputmode="decimal"/></div>'+
+            '<div><label style="font-size:11px;font-weight:700;color:#6B4C2A;display:block;margin-bottom:4px;">EMI/Month (Rs)</label><input type="number" id="ep-emi-'+p.id+'" value="'+p.emiAmt+'" style="width:100%;background:#fff;border:1.5px solid #E8D5A3;border-radius:8px;padding:8px;font-size:14px;min-height:40px;font-family:inherit;" inputmode="decimal"/></div>'+
+          '</div>'+
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">'+
+            '<div><label style="font-size:11px;font-weight:700;color:#6B4C2A;display:block;margin-bottom:4px;">Interest Rate %</label><input type="number" id="ep-rate-'+p.id+'" value="'+p.rate+'" style="width:100%;background:#fff;border:1.5px solid #E8D5A3;border-radius:8px;padding:8px;font-size:14px;min-height:40px;font-family:inherit;" inputmode="decimal"/></div>'+
+            '<div><label style="font-size:11px;font-weight:700;color:#6B4C2A;display:block;margin-bottom:4px;">Start Date</label><input type="date" id="ep-start-'+p.id+'" value="'+p.start+'" style="width:100%;background:#fff;border:1.5px solid #E8D5A3;border-radius:8px;padding:8px;font-size:14px;min-height:40px;font-family:inherit;"/></div>'+
+          '</div>'+
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">'+
+            '<div><label style="font-size:11px;font-weight:700;color:#6B4C2A;display:block;margin-bottom:4px;">Type</label><select id="ep-ptype-'+p.id+'" style="width:100%;background:#fff;border:1.5px solid #E8D5A3;border-radius:8px;padding:8px;font-size:14px;min-height:40px;font-family:inherit;-webkit-appearance:none;">'+( p.ptype==="given"?'<option value="given" selected>Maine Diya</option><option value="taken">Maine Liya</option>':'<option value="given">Maine Diya</option><option value="taken" selected>Maine Liya</option>' )+'</select></div>'+
+            '<div><label style="font-size:11px;font-weight:700;color:#6B4C2A;display:block;margin-bottom:4px;">Note</label><input id="ep-note-'+p.id+'" value="'+( p.note||"" )+'" style="width:100%;background:#fff;border:1.5px solid #E8D5A3;border-radius:8px;padding:8px;font-size:14px;min-height:40px;font-family:inherit;"/></div>'+
+          '</div>'+
+          '<div style="display:flex;gap:8px;">'+
+            '<button onclick="saveEditP('+p.id+')" style="flex:1;background:linear-gradient(135deg,#5C4000,#3D2B00);color:#FFE87C;border:none;border-radius:8px;padding:10px;font-size:14px;font-weight:700;cursor:pointer;min-height:44px;font-family:inherit;">Save Karo</button>'+
+            '<button onclick="editP('+p.id+')" style="background:#F0F0F5;border:1px solid #ddd;border-radius:8px;padding:10px 16px;font-size:14px;font-weight:600;cursor:pointer;min-height:44px;font-family:inherit;">Cancel</button>'+
+          '</div>'+
+        '</div>';
+      }
+
       var eh=p.emis.map(function(e){
         var isO=!e.paid&&e.due<=td();
         var sb=e.paid?'<span class="bdg b-pd">Paid</span>':isO?'<span class="bdg b-ov">Overdue</span>':'<span class="bdg b-pe">Pending</span>';
         var ab=e.paid?'<button class="btn sm" onclick="markEmi('+p.id+","+e.no+',false)">Undo</button>':'<button class="btn sm gn" onclick="markEmi('+p.id+","+e.no+',true)">Mark Paid</button>';
-        return '<div class="emi"><div class="el"><div class="en">EMI '+e.no+"/"+p.months+"</div>"+'<div class="ed">Due: '+e.due+(e.pdate?" | Paid: "+e.pdate:"")+"</div></div>"+'<div class="ea '+( e.paid?"gn":isO?"rd":"or" )+'">Rs '+f(e.amt)+"</div>"+'<div class="eac">'+sb+ab+"</div></div>";
+        var editEmiBtn='<button class="btn sm" style="background:#FFF8DC;border-color:#E8D5A3;color:#B8860B;" onclick="editEmi('+p.id+","+e.no+')">Edit</button>';
+
+        // EMI edit form
+        if(e.editing){
+          return '<div class="emi" style="flex-direction:column;align-items:stretch;background:#FFF8DC;">'+
+            '<div style="font-size:12px;font-weight:700;color:#B8860B;margin-bottom:8px;">EMI '+e.no+" Edit Karo</div>"+
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">'+
+              '<div><label style="font-size:11px;font-weight:700;color:#6B4C2A;display:block;margin-bottom:4px;">Due Date</label><input type="date" id="emi-due-'+pid+"-"+e.no+'" value="'+e.due+'" style="width:100%;background:#fff;border:1.5px solid #E8D5A3;border-radius:8px;padding:8px;font-size:14px;min-height:40px;font-family:inherit;"/></div>'+
+              '<div><label style="font-size:11px;font-weight:700;color:#6B4C2A;display:block;margin-bottom:4px;">Amount (Rs)</label><input type="number" id="emi-amt-'+pid+"-"+e.no+'" value="'+e.amt+'" style="width:100%;background:#fff;border:1.5px solid #E8D5A3;border-radius:8px;padding:8px;font-size:14px;min-height:40px;font-family:inherit;" inputmode="decimal"/></div>'+
+            '</div>'+
+            '<div style="display:flex;gap:8px;">'+
+              '<button onclick="saveEmi('+p.id+","+e.no+')" style="flex:1;background:linear-gradient(135deg,#5C4000,#3D2B00);color:#FFE87C;border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Save</button>'+
+              '<button onclick="editEmi('+p.id+","+e.no+')" style="background:#F0F0F5;border:1px solid #ddd;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">Cancel</button>'+
+            '</div>'+
+          '</div>';
+        }
+        return '<div class="emi"><div class="el"><div class="en">EMI '+e.no+"/"+p.months+"</div>"+'<div class="ed">Due: '+e.due+(e.pdate?" | Paid: "+e.pdate:"")+"</div></div>"+'<div class="ea '+( e.paid?"gn":isO?"rd":"or" )+'">Rs '+f(e.amt)+"</div>"+'<div class="eac">'+sb+ab+editEmiBtn+"</div></div>";
       }).join("");
-      body='<div class="pbdy"><div class="pst"><div class="ps"><div class="psl">Paid</div><div class="psv gn">Rs '+f(pa)+"</div></div>"+'<div class="ps"><div class="psl">Baki</div><div class="psv rd">Rs '+f(rm)+"</div></div>"+'<div class="ps"><div class="psl">Interest</div><div class="psv or">Rs '+f(it)+"</div></div></div>"+ic+eh+'<div style="padding:10px;text-align:right;border-top:1px solid #eee;"><button class="btn sm rd no-print" onclick="delParty('+p.id+')">Delete</button></div></div>';
+      body='<div class="pbdy"><div class="pst"><div class="ps"><div class="psl">Paid</div><div class="psv gn">Rs '+f(pa)+"</div></div>"+'<div class="ps"><div class="psl">Baki</div><div class="psv rd">Rs '+f(rm)+"</div></div>"+'<div class="ps"><div class="psl">Interest</div><div class="psv or">Rs '+f(it)+"</div></div></div>"+ic+editForm+eh+'<div style="padding:10px 14px;display:flex;gap:8px;justify-content:flex-end;border-top:1px solid #eee;"><button class="btn sm" style="background:#FFF8DC;border-color:#E8D5A3;color:#B8860B;" onclick="editP('+p.id+')">Edit Party</button><button class="btn sm rd no-print" onclick="delParty('+p.id+')">Delete</button></div></div>';
     }
     html+='<div class="pcard"><div class="ph" onclick="togP('+p.id+')"><div class="pav">'+ini(p.name)+"</div>"+'<div style="flex:1;min-width:0;"><div class="pnm">'+p.name+(p.phone?" ("+p.phone+")":"")+"</div>"+'<div class="psb">Rs '+f(p.emiAmt)+"/mo x "+p.months+" EMI &nbsp;"+lb+"&nbsp;"+ob+"</div></div>"+'<span class="chv'+( p.open?" op":"" )+'">&#9660;</span></div>'+body+"</div>";
   });
@@ -832,6 +931,123 @@ function dlRec(){
   a.download="KetanVerma_Records_"+td()+".csv";
   a.click();
 }
+function printLedger(acid){
+  var a=AC.find(function(x){return x.id===acid;});
+  if(!a)return;
+  var st=acStats(a);
+  var runBal=0;
+  var rows="";
+  a.txns.forEach(function(t){
+    var d=dago(t.date);
+    var intr=(t.type==="CR"||t.type==="DR")?calcI(t.amt,t.rate,d,t.method):0;
+    var tot=t.amt+intr;
+    var crA="",drA="",tl="",rS="-";
+    if(t.type==="CR"){runBal+=tot;crA=f(tot);tl="Credit";rS=t.rate>0?t.rate+"%":"-";}
+    else if(t.type==="DR"){runBal-=tot;drA=f(tot);tl="Debit";rS=t.rate>0?t.rate+"%":"-";}
+    else if(t.type==="INT_RECV"){runBal+=t.amt;crA=f(t.amt);tl="Interest Mila";}
+    else if(t.type==="INT_PAID"){runBal-=t.amt;drA=f(t.amt);tl="Interest Diya";}
+    var ic=intr>0?iDesc(t.amt,t.rate,d,t.method):"";
+    var balCls=runBal>=0?"color:#1D7A4F":"color:#C0392B";
+    rows+="<tr>"+
+      "<td style='white-space:nowrap'>"+t.date+"</td>"+
+      "<td>"+tl+"</td>"+
+      "<td>"+(t.desc||"-")+"</td>"+
+      "<td style='font-size:10px;color:#BA7517'>"+(rS!=="-"?rS+" "+t.method.charAt(0).toUpperCase()+t.method.slice(1):"")+"</td>"+
+      "<td style='text-align:right;color:#888;font-size:10px'>"+(ic?ic:"")+"</td>"+
+      "<td style='text-align:right;color:#1D7A4F;font-weight:700'>"+(crA?"Rs "+crA:"")+"</td>"+
+      "<td style='text-align:right;color:#C0392B;font-weight:700'>"+(drA?"Rs "+drA:"")+"</td>"+
+      "<td style='text-align:right;font-weight:700;"+balCls+"'>Rs "+f(Math.abs(runBal))+"<br/><span style='font-size:9px'>"+(runBal>=0?"CR":"DR")+"</span></td>"+
+    "</tr>";
+  });
+
+  var w2=window.open("","_blank");
+  var h="<!DOCTYPE html><html><head><meta charset='UTF-8'/>";
+  h+="<title>Ledger - "+a.name+"</title>";
+  h+="<style>";
+  h+="body{font-family:Arial,sans-serif;font-size:12px;margin:0;padding:20px;color:#111;}";
+  h+=".header{background:linear-gradient(135deg,#5C4000,#3D2B00);color:#FFE87C;padding:16px 20px;border-radius:8px;margin-bottom:16px;}";
+  h+=".header h1{font-size:18px;margin:0 0 4px;}";
+  h+=".header p{font-size:11px;opacity:.8;margin:0;}";
+  h+=".summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;}";
+  h+=".sum-card{background:#FFF8DC;border:1px solid #E8D5A3;border-radius:8px;padding:10px 12px;text-align:center;}";
+  h+=".sum-label{font-size:10px;color:#9B7A50;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;}";
+  h+=".sum-val{font-size:15px;font-weight:700;}";
+  h+="table{width:100%;border-collapse:collapse;margin-top:4px;}";
+  h+="th{background:#5C4000;color:#FFE87C;padding:8px 7px;font-size:10px;text-align:left;font-weight:700;text-transform:uppercase;letter-spacing:.04em;}";
+  h+="td{padding:7px 7px;border-bottom:1px solid #F0E4C0;font-size:11px;vertical-align:top;}";
+  h+="tr:nth-child(even) td{background:#FFFDF0;}";
+  h+=".footer{margin-top:16px;background:#FFF8DC;border:1.5px solid #DAA520;border-radius:8px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;}";
+  h+=".footer-bal{font-size:16px;font-weight:700;}";
+  h+=".footer-note{font-size:11px;color:#9B7A50;}";
+  h+="@media print{body{margin:0;}@page{margin:10mm;}}";
+  h+="</style></head><body>";
+
+  // Header
+  h+="<div class='header'>";
+  h+="<h1>"+a.name+(a.phone?" &nbsp; "+a.phone:"")+"</h1>";
+  h+="<p>Ketan Verma Personal Ledger &nbsp;|&nbsp; Print Date: "+td()+" &nbsp;|&nbsp; Not for firm use</p>";
+  h+="</div>";
+
+  // Summary
+  h+="<div class='summary'>";
+  h+="<div class='sum-card'><div class='sum-label'>Total Credit</div><div class='sum-val' style='color:#1D7A4F'>Rs "+f(st.tCR)+"</div></div>";
+  h+="<div class='sum-card'><div class='sum-label'>Total Debit</div><div class='sum-val' style='color:#C0392B'>Rs "+f(st.tDR)+"</div></div>";
+  h+="<div class='sum-card'><div class='sum-label'>Int Mila</div><div class='sum-val' style='color:#B8860B'>Rs "+f(st.tIR)+"</div></div>";
+  h+="<div class='sum-card'><div class='sum-label'>Int Diya</div><div class='sum-val' style='color:#6C3483'>Rs "+f(st.tIP)+"</div></div>";
+  h+="</div>";
+
+  // Table
+  h+="<table>";
+  h+="<tr><th>Date</th><th>Type</th><th>Vivaran</th><th>Rate / Method</th><th>Interest Calculation</th><th style='text-align:right'>Credit (Rs)</th><th style='text-align:right'>Debit (Rs)</th><th style='text-align:right'>Balance (Rs)</th></tr>";
+  h+=rows;
+  h+="</table>";
+
+  // Footer balance
+  var bal=st.bal;
+  h+="<div class='footer'>";
+  h+="<div><div class='footer-bal'>Net Balance: <span style='"+(bal>=0?"color:#1D7A4F":"color:#C0392B")+"'>Rs "+f(Math.abs(bal))+" "+(bal>=0?"(CR)":"(DR)")+"</span></div>";
+  if(st.tIR>0||st.tIP>0)h+="<div class='footer-note'>Interest Mila: Rs "+f(st.tIR)+" &nbsp;|&nbsp; Interest Diya: Rs "+f(st.tIP)+"</div>";
+  h+="</div>";
+  h+="<div class='footer-note'>"+a.txns.length+" transactions</div>";
+  h+="</div>";
+  h+="</body></html>";
+  w2.document.write(h);w2.document.close();
+  setTimeout(function(){w2.print();},400);
+}
+
+function csvLedger(acid){
+  var a=AC.find(function(x){return x.id===acid;});
+  if(!a)return;
+  var st=acStats(a);
+  var runBal=0;
+  var csv="KETAN VERMA - PERSONAL LEDGER\n";
+  csv+="Party: "+a.name+(a.phone?" | "+a.phone:"")+"\n";
+  csv+="Print Date: "+td()+" | Not for firm use\n\n";
+  csv+="Date,Type,Vivaran,Rate%,Method,Interest Calculation,Credit (Rs),Debit (Rs),Balance (Rs)\n";
+  a.txns.forEach(function(t){
+    var d=dago(t.date);
+    var intr=(t.type==="CR"||t.type==="DR")?calcI(t.amt,t.rate,d,t.method):0;
+    var tot=t.amt+intr;
+    var crA="",drA="",tl="";
+    if(t.type==="CR"){runBal+=tot;crA=f(tot);tl="Credit";}
+    else if(t.type==="DR"){runBal-=tot;drA=f(tot);tl="Debit";}
+    else if(t.type==="INT_RECV"){runBal+=t.amt;crA=f(t.amt);tl="Interest Mila";}
+    else if(t.type==="INT_PAID"){runBal-=t.amt;drA=f(t.amt);tl="Interest Diya";}
+    var ic=intr>0?iDesc(t.amt,t.rate,d,t.method):"";
+    csv+=t.date+","+tl+',"'+(t.desc||"")+'",'+(t.rate||"")+","+(t.method||"")+',"'+ic+'",'+crA+","+drA+","+f(Math.abs(runBal))+" "+(runBal>=0?"CR":"DR")+"\n";
+  });
+  csv+="\nSUMMARY\n";
+  csv+="Total Credit,Rs "+f(st.tCR)+"\n";
+  csv+="Total Debit,Rs "+f(st.tDR)+"\n";
+  csv+="Interest Mila,Rs "+f(st.tIR)+"\n";
+  csv+="Interest Diya,Rs "+f(st.tIP)+"\n";
+  csv+="Net Balance,Rs "+f(Math.abs(st.bal))+" "+(st.bal>=0?"CR":"DR")+"\n";
+  var aa=document.createElement("a");
+  aa.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+  aa.download="Ledger_"+a.name.replace(/ /g,"_")+"_"+td()+".csv";
+  aa.click();
+}
+
 function updateSum(){
   var tCR=0,tDR=0,tIR=0,tIP=0,tEmi=0,tExp=0,ov=0;
   AC.forEach(function(a){var st=acStats(a);tCR+=st.tCR;tDR+=st.tDR;tIR+=st.tIR;tIP+=st.tIP;});
