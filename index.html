@@ -496,7 +496,14 @@ function loadLocal(){
 
 function saveToFirebase(){
   try{
-    if(db) db.ref("ketan_verma").set({ac:AC,ep:EP,ex:EX});
+    if(!db)return;
+    var cEP=EP.map(function(p){
+      var cp=JSON.parse(JSON.stringify(p));
+      delete cp.editing;
+      if(cp.emis)cp.emis.forEach(function(e){delete e.editing;});
+      return cp;
+    });
+    db.ref("ketan_verma").set({ac:AC,ep:cEP,ex:EX});
   }catch(e){ console.log("Firebase save error:", e); }
 }
 
@@ -815,8 +822,8 @@ function renderP(){
           return '<div class="emi" style="flex-direction:column;align-items:stretch;background:#FFF8DC;">'+
             '<div style="font-size:12px;font-weight:700;color:#B8860B;margin-bottom:8px;">EMI '+e.no+" Edit Karo</div>"+
             '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">'+
-              '<div><label style="font-size:11px;font-weight:700;color:#6B4C2A;display:block;margin-bottom:4px;">Due Date</label><input type="date" id="emi-due-'+pid+"-"+e.no+'" value="'+e.due+'" style="width:100%;background:#fff;border:1.5px solid #E8D5A3;border-radius:8px;padding:8px;font-size:14px;min-height:40px;font-family:inherit;"/></div>'+
-              '<div><label style="font-size:11px;font-weight:700;color:#6B4C2A;display:block;margin-bottom:4px;">Amount (Rs)</label><input type="number" id="emi-amt-'+pid+"-"+e.no+'" value="'+e.amt+'" style="width:100%;background:#fff;border:1.5px solid #E8D5A3;border-radius:8px;padding:8px;font-size:14px;min-height:40px;font-family:inherit;" inputmode="decimal"/></div>'+
+              '<div><label style="font-size:11px;font-weight:700;color:#6B4C2A;display:block;margin-bottom:4px;">Due Date</label><input type="date" id="emi-due-'+p.id+"-"+e.no+'" value="'+e.due+'" style="width:100%;background:#fff;border:1.5px solid #E8D5A3;border-radius:8px;padding:8px;font-size:14px;min-height:40px;font-family:inherit;"/></div>'+
+              '<div><label style="font-size:11px;font-weight:700;color:#6B4C2A;display:block;margin-bottom:4px;">Amount (Rs)</label><input type="number" id="emi-amt-'+p.id+"-"+e.no+'" value="'+e.amt+'" style="width:100%;background:#fff;border:1.5px solid #E8D5A3;border-radius:8px;padding:8px;font-size:14px;min-height:40px;font-family:inherit;" inputmode="decimal"/></div>'+
             '</div>'+
             '<div style="display:flex;gap:8px;">'+
               '<button onclick="saveEmi('+p.id+","+e.no+')" style="flex:1;background:linear-gradient(135deg,#5C4000,#3D2B00);color:#FFE87C;border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Save</button>'+
@@ -824,7 +831,7 @@ function renderP(){
             '</div>'+
           '</div>';
         }
-        return '<div class="emi"><div class="el"><div class="en">EMI '+e.no+"/"+p.months+"</div>"+'<div class="ed">Due: '+e.due+(e.pdate?" | Paid: "+e.pdate:"")+"</div></div>"+'<div class="ea '+( e.paid?"gn":isO?"rd":"or" )+'">Rs '+f(e.amt)+"</div>"+'<div class="eac">'+sb+ab+editEmiBtn+"</div></div>";
+        return '<div class="emi"><div class="el"><div class="en">EMI '+e.no+"/"+p.months+"</div>"+'<div class="ed">Due: '+e.due+(e.pdate?" | Paid: "+e.pdate:"")+"</div></div>"+'<div class="ea '+( e.paid?"gn":isO?"rd":"or" )+'">Rs '+f(e.amt)+"</div>"+'<div class="eac">'+sb+ab+editEmiBtn+'<button class="btn sm" style="background:#E8F5EE;border-color:#1D7A4F;color:#1D7A4F;" onclick="printEmiReceipt('+p.id+','+e.no+')">Receipt</button>'+"</div></div>";
       }).join("");
       body='<div class="pbdy"><div class="pst"><div class="ps"><div class="psl">Paid</div><div class="psv gn">Rs '+f(pa)+"</div></div>"+'<div class="ps"><div class="psl">Baki</div><div class="psv rd">Rs '+f(rm)+"</div></div>"+'<div class="ps"><div class="psl">Interest</div><div class="psv or">Rs '+f(it)+"</div></div></div>"+ic+editForm+eh+'<div style="padding:10px 14px;display:flex;gap:8px;justify-content:flex-end;border-top:1px solid #eee;"><button class="btn sm" style="background:#FFF8DC;border-color:#E8D5A3;color:#B8860B;" onclick="editP('+p.id+')">Edit Party</button><button class="btn sm rd no-print" onclick="delParty('+p.id+')">Delete</button></div></div>';
     }
@@ -1046,6 +1053,99 @@ function csvLedger(acid){
   aa.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
   aa.download="Ledger_"+a.name.replace(/ /g,"_")+"_"+td()+".csv";
   aa.click();
+}
+
+function printEmiReceipt(pid,eno){
+  var p=EP.find(function(x){return x.id===pid;});
+  if(!p)return;
+  var e=p.emis.find(function(x){return x.no===eno;});
+  if(!e)return;
+  var intr=p.rate>0?calcI(p.total,p.rate,dago(p.start),"simple"):0;
+  var paidCnt=p.emis.filter(function(x){return x.paid;}).length;
+  var paidAmt=paidCnt*p.emiAmt;
+  var remaining=Math.max(0,p.total-paidAmt);
+
+  var w2=window.open("","_blank");
+  var h="<!DOCTYPE html><html><head><meta charset='UTF-8'/>";
+  h+="<title>EMI Receipt - "+p.name+"</title>";
+  h+="<style>";
+  h+="*{box-sizing:border-box;margin:0;padding:0;}";
+  h+="body{font-family:Arial,sans-serif;font-size:13px;color:#111;padding:20px;max-width:400px;margin:0 auto;}";
+  h+=".receipt{border:2px solid #5C4000;border-radius:12px;overflow:hidden;}";
+  h+=".rhead{background:linear-gradient(135deg,#5C4000,#3D2B00);color:#FFE87C;padding:16px 20px;text-align:center;}";
+  h+=".rhead h1{font-size:20px;margin-bottom:4px;}";
+  h+=".rhead p{font-size:11px;opacity:.8;}";
+  h+=".rbody{padding:16px 20px;}";
+  h+=".row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px dashed #E8D5A3;}";
+  h+=".row:last-child{border-bottom:none;}";
+  h+=".rlbl{font-size:12px;color:#9B7A50;font-weight:600;}";
+  h+=".rval{font-size:13px;font-weight:700;text-align:right;}";
+  h+=".big-amt{background:#FFF8DC;border:2px solid #DAA520;border-radius:10px;padding:14px 16px;text-align:center;margin:14px 0;}";
+  h+=".big-amt-l{font-size:12px;color:#9B7A50;font-weight:700;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;}";
+  h+=".big-amt-v{font-size:28px;font-weight:700;color:#5C4000;}";
+  h+=".status-paid{background:#E8F5EE;border:2px solid #1D7A4F;border-radius:8px;padding:10px;text-align:center;color:#1D7A4F;font-size:15px;font-weight:700;margin:10px 0;}";
+  h+=".status-pend{background:#FDF0D5;border:2px solid #B8860B;border-radius:8px;padding:10px;text-align:center;color:#B8860B;font-size:15px;font-weight:700;margin:10px 0;}";
+  h+=".status-over{background:#FDE8E6;border:2px solid #C0392B;border-radius:8px;padding:10px;text-align:center;color:#C0392B;font-size:15px;font-weight:700;margin:10px 0;}";
+  h+=".footer-strip{background:#5C4000;color:#FFE87C;padding:10px 16px;text-align:center;font-size:11px;}";
+  h+=".progress-bar{background:#F0E4C0;border-radius:4px;height:8px;margin-top:6px;overflow:hidden;}";
+  h+=".progress-fill{background:linear-gradient(to right,#5C4000,#DAA520);height:100%;border-radius:4px;}";
+  h+="@media print{body{padding:0;}@page{margin:5mm;size:A5;}}";
+  h+="</style></head><body>";
+  h+="<div class='receipt'>";
+
+  // Header
+  h+="<div class='rhead'>";
+  h+="<h1>EMI Receipt</h1>";
+  h+="<p>Ketan Verma Personal Finance &nbsp;|&nbsp; Not for firm</p>";
+  h+="</div>";
+
+  // Big Amount
+  h+="<div class='rbody'>";
+  h+="<div class='big-amt'>";
+  h+="<div class='big-amt-l'>EMI Amount</div>";
+  h+="<div class='big-amt-v'>Rs "+f(e.amt)+"</div>";
+  h+="</div>";
+
+  // Status
+  var isOver=!e.paid&&e.due<=td();
+  if(e.paid){
+    h+="<div class='status-paid'>&#10003; PAID</div>";
+  } else if(isOver){
+    h+="<div class='status-over'>&#9888; OVERDUE</div>";
+  } else {
+    h+="<div class='status-pend'>&#8987; PENDING</div>";
+  }
+
+  // Details
+  h+="<div class='row'><span class='rlbl'>Party Name</span><span class='rval'>"+p.name+"</span></div>";
+  if(p.phone) h+="<div class='row'><span class='rlbl'>Phone</span><span class='rval'>"+p.phone+"</span></div>";
+  h+="<div class='row'><span class='rlbl'>EMI No.</span><span class='rval'>"+e.no+" / "+p.months+"</span></div>";
+  h+="<div class='row'><span class='rlbl'>Due Date</span><span class='rval'>"+e.due+"</span></div>";
+  if(e.paid&&e.pdate) h+="<div class='row'><span class='rlbl'>Paid Date</span><span class='rval' style='color:#1D7A4F'>"+e.pdate+"</span></div>";
+  h+="<div class='row'><span class='rlbl'>Loan Type</span><span class='rval'>"+(p.ptype==="given"?"Maine Diya (Lent)":"Maine Liya (Borrowed)")+"</span></div>";
+  h+="<div class='row'><span class='rlbl'>Total Loan</span><span class='rval'>Rs "+f(p.total)+"</span></div>";
+  h+="<div class='row'><span class='rlbl'>Total EMIs</span><span class='rval'>"+paidCnt+" paid, "+(p.months-paidCnt)+" remaining</span></div>";
+  h+="<div class='row'><span class='rlbl'>Amount Paid So Far</span><span class='rval' style='color:#1D7A4F'>Rs "+f(paidAmt)+"</span></div>";
+  h+="<div class='row'><span class='rlbl'>Amount Remaining</span><span class='rval' style='color:#C0392B'>Rs "+f(remaining)+"</span></div>";
+
+  // Progress bar
+  var pct=p.total>0?Math.min(100,Math.round(paidAmt/p.total*100)):0;
+  h+="<div style='margin:10px 0 4px;'><div style='display:flex;justify-content:space-between;font-size:11px;color:#9B7A50;margin-bottom:4px;'><span>Progress</span><span>"+pct+"%</span></div>";
+  h+="<div class='progress-bar'><div class='progress-fill' style='width:"+pct+"%;'></div></div></div>";
+
+  if(p.rate>0){
+    h+="<div class='row'><span class='rlbl'>Interest Rate</span><span class='rval'>"+p.rate+"% p.a. (Simple)</span></div>";
+    h+="<div class='row'><span class='rlbl'>Total Interest</span><span class='rval' style='color:#B8860B'>Rs "+f(intr)+"</span></div>";
+    h+="<div style='background:#FFF8DC;border-radius:6px;padding:7px 10px;margin:8px 0;font-size:10px;color:#9B7A50;'>"+iDesc(p.total,p.rate,dago(p.start),"simple")+"</div>";
+  }
+
+  h+="<div style='font-size:10px;color:#C8C0B0;text-align:center;margin-top:12px;'>Receipt generated: "+td()+"</div>";
+  h+="</div>";
+  h+="<div class='footer-strip'>Ketan Verma Personal Finance &nbsp;&#10022;&nbsp; Not for firm use</div>";
+  h+="</div>";
+  h+="</body></html>";
+  w2.document.write(h);w2.document.close();
+  setTimeout(function(){w2.print();},400);
 }
 
 function updateSum(){
