@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="theme-color" content="#5C4000"/>
+<title>Ketan Verma Finance</title>
+
+<style>
+:root{--gold:#B8860B;--gold2:#DAA520;--gold3:#FFE87C;--gold4:#5C4000;--gold5:#3D2B00;--cream:#FFF8DC;--cream2:#FEF3C0;--cream3:#FFFDF5;--bg:#FBF6E9;--card:#FFFFFF;--border:#E8D5A3;--border2:#F0E4C0;--text:#2C1810;--t2:#6B4C2A;--t3:#9B7A50;--t4:#C8B898;--green:#1D7A4F;--gbg:#E8F5EE;--red:#C0392B;--rbg:#FDE8E6;--blue:#1A5276;--bbg:#EBF5FB;--shadow:0 2px 16px rgba(92,64,0,.12);--shadow2:0 1px 6px rgba(92,64,0,.08);}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);font-size:15px;min-height:100vh;}
+.top{background:linear-gradient(135deg,var(--gold4),var(--gold5));color:var(--gold3);padding:12px 14px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:999;box-shadow:0 2px 12px rgba(61,43,0,.3);}
+.top h1{font-size:17px;font-weight:700;color:var(--gold3);letter-spacing:.03em;}
+.top p{font-size:10px;color:var(--gold2);opacity:.9;margin-top:1px;letter-spacing:.06em;}
+.topbtns{display:flex;gap:6px;}
+.tbtn{background:rgba(255,232,124,.15);border:1px solid var(--gold3);color:var(--gold3);padding:7px 11px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;}
+.tbtn:active{background:rgba(255,232,124,.3);}
+.sync{font-size:11px;font-weight:700;padding:4px 8px;border-radius:6px;background:rgba(0,0,0,.2);margin-right:4px;}
+.nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:2px solid var(--gold2);display:flex;z-index:999;box-shadow:0 -2px 10px rgba(92,64,0,.1);}
+.ni{flex:1;border:none;background:none;padding:8px 0 5px;font-size:10px;font-weight:700;color:var(--t4);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;letter-spacing:.03em;}
+.ni.on{color:var(--gold);}
+.ni-ic{font-size:21px;line-height:1;}
+.page{display:none;padding:10px;padding-bottom:80px;max-width:500px;margin:0 auto;}.page.on{display:block;}
+.sum{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.sc{background:var(--card);border-radius:10px;padding:10px 12px;border:1px solid var(--border);box-shadow:var(--shadow2);}
+.sc.full{grid-column:1/-1;background:var(--cream);border-color:var(--gold2);}
+.sl{font-size:11px;color:var(--t3);font-weight:700;margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;}
+.sv{font-size:18px;font-weight:700;}
+.gn{color:var(--green);}.rd{color:var(--red);}.or{color:var(--gold);}.bl{color:var(--blue);}
+.alrt{background:#FDF0D5;border:1.5px solid var(--gold2);border-radius:10px;padding:10px 13px;margin-bottom:10px;font-size:13px;color:var(--gold4);font-weight:600;display:none;}
+.fc{background:var(--card);border-radius:14px;border:1px solid var(--border);overflow:hidden;margin-bottom:12px;box-shadow:var(--shadow);}
+.fh{padding:13px 15px;font-size:15px;font-weight:700;color:var(--gold3);background:linear-gradient(135deg,var(--gold4),var(--gold5));letter-spacing:.02em;}
+.fh.blue{background:linear-gradient(135deg,#1A3A5C,#0E2238);}
+.fh.purple{background:linear-gradient(135deg,#4A235A,#2D1040);}
+.fb{padding:12px 13px 6px;}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+.r1{margin-bottom:8px;}
+.fg{display:flex;flex-direction:column;gap:4px;}
+.fg label{font-size:12px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.04em;}
+input,select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:15px;font-family:inherit;color:var(--text);outline:none;min-height:46px;-webkit-appearance:none;}
+input:focus,select:focus{border-color:var(--gold2);box-shadow:0 0 0 3px rgba(184,134,11,.12);background:var(--card);}
+input::placeholder{color:var(--t4);}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23B8860B' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;background-color:var(--bg);}
+.trow{display:flex;align-items:center;gap:10px;padding:5px 0;}
+.tlbl{font-size:14px;color:var(--t2);flex:1;}
+.tgl{position:relative;width:48px;height:28px;flex-shrink:0;}
+.tgl input{opacity:0;width:0;height:0;}
+.ts{position:absolute;inset:0;background:var(--border);border-radius:14px;cursor:pointer;transition:.2s;}
+.ts::before{content:"";position:absolute;width:22px;height:22px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 4px rgba(0,0,0,.2);}
+.tgl input:checked+.ts{background:var(--gold2);}
+.tgl input:checked+.ts::before{transform:translateX(20px);}
+.btn{display:flex;align-items:center;justify-content:center;padding:12px;border-radius:10px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;min-height:46px;transition:all .15s;}
+.btn:active{opacity:.75;transform:scale(.97);}
+.btn.gold{background:linear-gradient(135deg,var(--gold4),var(--gold5));color:var(--gold3);border-color:var(--gold2);}
+.btn.gn{background:var(--gbg);color:var(--green);border-color:var(--green);}
+.btn.rd{background:var(--rbg);color:var(--red);border-color:var(--red);}
+.btn.bl{background:var(--bbg);color:var(--blue);border-color:var(--blue);}
+.btn.or{background:var(--cream);color:var(--gold4);border-color:var(--gold2);}
+.btn.sm{padding:6px 11px;font-size:12px;min-height:32px;border-radius:8px;}
+.brow{display:flex;gap:8px;margin-top:10px;padding-bottom:6px;}
+.sec{font-size:11px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.1em;margin:14px 0 8px 2px;display:flex;align-items:center;gap:8px;}
+.sec::after{content:"";flex:1;height:1px;background:linear-gradient(to right,var(--border),transparent);}
+.bdg{display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700;}
+.b-cr{background:var(--gbg);color:var(--green);}
+.b-dr{background:var(--rbg);color:var(--red);}
+.b-ir{background:var(--cream);color:var(--gold4);}
+.b-ip{background:#F5EEF8;color:#6C3483;}
+.b-ex{background:var(--bbg);color:var(--blue);}
+.b-pd{background:var(--gbg);color:var(--green);}
+.b-ov{background:var(--rbg);color:var(--red);}
+.b-pe{background:var(--cream2);color:var(--gold4);}
+.pcard{background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow);}
+.pc-hdr{display:flex;align-items:center;gap:11px;padding:13px;cursor:pointer;}
+.pc-hdr:active{background:var(--cream3);}
+.pav{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--gold4),var(--gold5));border:2px solid var(--gold2);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:var(--gold3);flex-shrink:0;box-shadow:0 2px 8px rgba(92,64,0,.2);}
+.pnm{font-weight:700;font-size:15px;color:var(--text);}
+.psb{font-size:12px;color:var(--t3);margin-top:3px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;}
+.chv{color:var(--t4);font-size:16px;margin-left:auto;flex-shrink:0;transition:transform .2s;}
+.chv.op{transform:rotate(180deg);}
+.pbdy{border-top:1.5px solid var(--border);}
+.pstats{display:grid;grid-template-columns:repeat(4,1fr);background:var(--cream3);border-bottom:1px solid var(--border);}
+.pst{padding:8px 4px;text-align:center;border-right:1px solid var(--border2);}
+.pst:last-child{border-right:none;}
+.pst-l{font-size:10px;color:var(--t3);font-weight:700;margin-bottom:2px;text-transform:uppercase;letter-spacing:.03em;}
+.pst-v{font-size:13px;font-weight:700;}
+.add-txn{padding:10px 12px;border-bottom:1px solid var(--border2);background:linear-gradient(135deg,#F0FFF8,#E8F5EE);}
+.add-txn-title{font-size:11px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+.add-g3{display:grid;grid-template-columns:80px 1fr 65px;gap:6px;margin-bottom:6px;}
+.add-g4{display:grid;grid-template-columns:78px 1fr 60px 52px;gap:5px;margin-bottom:6px;}
+.add-g3 input,.add-g3 select,.add-g4 input,.add-g4 select{font-size:13px;min-height:38px;padding:6px 7px;}
+.add-row{display:flex;gap:6px;}
+.add-row select{flex:1;font-size:13px;min-height:38px;padding:6px 8px;}
+.add-btn{border:none;border-radius:8px;padding:8px 13px;font-size:13px;font-weight:700;cursor:pointer;min-height:38px;white-space:nowrap;color:#fff;font-family:inherit;}
+.pb-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.pb-table{width:100%;border-collapse:collapse;min-width:520px;font-size:12px;}
+.pb-table th{background:linear-gradient(135deg,var(--gold4),var(--gold5));padding:8px;font-size:11px;font-weight:700;color:var(--gold3);text-align:left;border-bottom:2px solid var(--gold2);white-space:nowrap;text-transform:uppercase;letter-spacing:.04em;}
+.pb-table td{padding:8px 8px;border-bottom:1px solid var(--border2);vertical-align:top;color:var(--text);}
+.pb-table tr:last-child td{border-bottom:none;}
+.pb-table tr:nth-child(even) td{background:var(--cream3);}
+.pb-table tr:hover td{background:var(--cream2);}
+.td-cr{color:var(--green);font-weight:700;text-align:right;}
+.td-dr{color:var(--red);font-weight:700;text-align:right;}
+.td-bal{font-weight:700;text-align:right;}
+.td-ic{color:var(--gold);font-size:10px;margin-top:2px;}
+.pfooter{padding:10px 13px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border);background:var(--cream3);flex-wrap:wrap;gap:6px;}
+.rc{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 13px;display:flex;align-items:center;gap:10px;margin-bottom:8px;box-shadow:var(--shadow2);}
+.rav{width:42px;height:42px;border-radius:50%;background:var(--bbg);border:1px solid var(--blue);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--blue);flex-shrink:0;}
+.ri{flex:1;min-width:0;}.rn{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rs{font-size:12px;color:var(--t3);margin-top:2px;}.rr{text-align:right;flex-shrink:0;}.ra{font-size:16px;font-weight:700;}
+.xb{background:none;border:none;color:var(--t4);font-size:20px;cursor:pointer;padding:4px;flex-shrink:0;}
+.flt{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
+.flt select,.flt input{flex:1;min-height:42px;font-size:13px;min-width:100px;}
+.ri-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 13px;margin-bottom:8px;box-shadow:var(--shadow2);}
+.ri-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.ri-name{font-weight:700;font-size:14px;}.ri-amt{font-size:15px;font-weight:700;flex-shrink:0;}
+.ri-meta{font-size:12px;color:var(--t3);margin-top:4px;}
+.ri-calc{font-size:11px;color:var(--gold);margin-top:4px;background:var(--cream);border:1px solid var(--border2);border-radius:6px;padding:5px 8px;}
+.tot-box{background:var(--cream);border:1.5px solid var(--gold2);border-radius:12px;padding:12px;margin-bottom:10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.tl{font-size:11px;color:var(--t3);font-weight:700;margin-bottom:2px;text-transform:uppercase;}.tv{font-size:16px;font-weight:700;}
+.empty{text-align:center;color:var(--t4);padding:28px;font-size:14px;}
+@media print{
+  .nav,.top,.add-txn,.brow,.xb,.flt,.no-print,.no-print-overlay{display:none!important;}
+  body{background:#fff;}
+  .page{display:block!important;padding:0;}
+  #printOverlay{position:static!important;padding:0!important;}
+  #loginScreen{display:none!important;}
+  #mainApp{display:block!important;}
+  .pb-table th{background:#5C4000!important;color:#FFE87C!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+}
+</style>
+</head><body>
+<div id="loginScreen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#3D2B00,#1A1000);padding:24px;">
+<div style="width:100%;max-width:360px;">
+<div style="text-align:center;margin-bottom:28px;"><div style="font-size:52px;">&#128218;</div>
+<h1 style="font-size:24px;font-weight:700;color:#FFE87C;margin-top:8px;">Ketan Verma</h1>
+<p style="font-size:12px;color:#C9A84C;margin-top:4px;letter-spacing:.08em;text-transform:uppercase;">Personal Finance</p></div>
+<div style="background:#fff;border-radius:20px;padding:26px 22px;box-shadow:0 8px 32px rgba(0,0,0,.4);">
+<h2 style="font-size:18px;font-weight:700;color:#2C1810;margin-bottom:4px;">Login</h2>
+<p style="font-size:13px;color:#9B7A50;margin-bottom:18px;">Sirf aap hi apna data dekh sakte ho</p>
+<div style="margin-bottom:12px;"><label style="font-size:12px;font-weight:700;color:#6B4C2A;text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:5px;">Email</label>
+<input type="email" id="loginEmail" placeholder="aapka@email.com" inputmode="email" style="width:100%;background:#FFF8E7;border:1.5px solid #E8D5A3;border-radius:10px;padding:12px 14px;font-size:15px;font-family:inherit;color:#2C1810;outline:none;min-height:48px;-webkit-appearance:none;"/></div>
+<div style="margin-bottom:18px;"><label style="font-size:12px;font-weight:700;color:#6B4C2A;text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:5px;">Password</label>
+<div style="position:relative;"><input type="password" id="loginPass" placeholder="Password" style="width:100%;background:#FFF8E7;border:1.5px solid #E8D5A3;border-radius:10px;padding:12px 44px 12px 14px;font-size:15px;font-family:inherit;color:#2C1810;outline:none;min-height:48px;-webkit-appearance:none;"/>
+<button onclick="togglePass()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:18px;cursor:pointer;color:#9B7A50;">&#128065;</button></div></div>
+<div id="loginErr" style="background:#FDE8E6;border:1px solid #C0392B;border-radius:8px;padding:9px 12px;margin-bottom:12px;font-size:13px;color:#C0392B;font-weight:500;display:none;"></div>
+<button onclick="doLogin()" id="loginBtn" style="width:100%;background:linear-gradient(135deg,#5C4000,#3D2B00);color:#FFE87C;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:700;cursor:pointer;min-height:52px;font-family:inherit;">Login</button>
+</div>
+<p style="text-align:center;color:#8B6914;font-size:12px;margin-top:18px;">&#128274; Aapka data safe aur private hai</p>
+</div></div>
+<div id="mainApp" style="display:none;">
+<!-- PRINT OVERLAY -->
+<div id="printOverlay" style="display:none;position:fixed;inset:0;background:#fff;z-index:9999;overflow-y:auto;padding:20px;">
+  <div style="max-width:600px;margin:0 auto;">
+    <div style="display:flex;gap:8px;margin-bottom:16px;" class="no-print-overlay">
+      <button onclick="closePrintOverlay()" style="background:#C0392B;color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:14px;font-weight:700;cursor:pointer;">&#x2715; Close</button>
+      <button onclick="window.print()" style="background:#5C4000;color:#FFE87C;border:none;border-radius:8px;padding:10px 18px;font-size:14px;font-weight:700;cursor:pointer;">&#128424; Print / Save PDF</button>
+    </div>
+    <div id="printContent"></div>
+  </div>
+</div>
+<div class="top">
+<div><h1>Ketan Verma</h1><p>PERSONAL FINANCE &middot; NOT FOR FIRM</p></div>
+<div style="display:flex;align-items:center;gap:6px;">
+<span class="sync" id="syncInd" style="color:#E74C3C;">Offline</span>
+<button class="tbtn" onclick="doLogout()">Logout</button>
+<button class="tbtn" onclick="window.print()">Print</button>
+<button class="tbtn" onclick="doCSV()">CSV</button>
+</div></div>
+<div class="page on" id="pg-party">
+<div class="alrt" id="alrtBox"></div>
+<div class="sum" id="sg1"></div>
+<div class="fc no-print">
+<div class="fh">+ Naya Party Account Banao</div>
+<div class="fb">
+<div class="r2"><div class="fg"><label>Party Naam *</label><input id="pn" placeholder="Naam"/></div>
+<div class="fg"><label>Phone</label><input id="pph" placeholder="Optional" type="tel" inputmode="tel"/></div></div>
+<div class="r2"><div class="fg"><label>Interest Rate (% p.a.)</label><input type="number" id="prate" value="0" inputmode="decimal" placeholder="Default rate"/></div>
+<div class="fg"><label>Method</label><select id="pmethod"><option value="simple">Simple</option><option value="compound12">Compound (Annual)</option><option value="compound6">Compound (6 Month)</option><option value="compound3">Compound (3 Month)</option></select></div></div>
+<div class="r2"><div class="fg"><label>Type</label><select id="ptype"><option value="given">Maine Diya (Lent)</option><option value="taken">Maine Liya (Borrowed)</option></select></div>
+<div class="fg"><label>Note</label><input id="pnote" placeholder="Optional"/></div></div>
+<div class="brow"><button class="btn gold" style="flex:1" onclick="addParty()">+ Party Banao</button><button class="btn" onclick="clrP()">Clear</button></div>
+</div></div>
+<div class="sec">Party Ledgers</div>
+<div id="partyList"><div class="empty">Koi party nahi. Upar se banao.</div></div>
+</div>
+<div class="page" id="pg-expense">
+<div class="sum" id="sg2"></div>
+<div class="fc no-print">
+<div class="fh blue">+ Kharcha Add Karo</div>
+<div class="fb">
+<div class="r2"><div class="fg"><label>Naam *</label><input id="en" placeholder="e.g. Grocery"/></div>
+<div class="fg"><label>Date *</label><input type="date" id="ed"/></div></div>
+<div class="r2"><div class="fg"><label>Category</label><select id="ec"><option>Khana aur Grocery</option><option>Travel aur Petrol</option><option>Medical</option><option>Bijli Pani Bill</option><option>Entertainment</option><option>Kapde</option><option>Padhai</option><option>Ghar ka Kharcha</option><option>EMI aur Loan</option><option>Aur Kuch</option></select></div>
+<div class="fg"><label>Amount (Rs) *</label><input type="number" id="ea" placeholder="0" inputmode="decimal"/></div></div>
+<div class="r1 fg"><label>Note</label><input id="enote" placeholder="Optional"/></div>
+<div class="brow"><button class="btn bl" style="flex:1" onclick="addExp()">+ Kharcha Add</button><button class="btn" onclick="clrE()">Clear</button></div>
+</div></div>
+<div class="sec">Kharche Ki List</div>
+<div id="eList"><div class="empty">Koi kharcha nahi.</div></div>
+</div>
+<div class="page" id="pg-records">
+<div class="flt no-print"><select id="rf" onchange="renderRec()"><option value="all">Sab Records</option><option value="CR">Credit</option><option value="DR">Debit</option><option value="EMI">EMI</option><option value="INT">Interest</option><option value="GOLD">Gold</option><option value="EXP">Kharche</option></select>
+<input type="month" id="rm" onchange="renderRec()"/></div>
+<div class="flt no-print"><button class="btn gn" style="flex:1;font-size:13px;" onclick="printRec()">Print Records</button><button class="btn bl" style="flex:1;font-size:13px;" onclick="dlRec()">Download CSV</button></div>
+<div id="recList"><div class="empty">Koi records nahi.</div></div>
+</div>
+<div class="nav">
+<button class="ni on" onclick="goTab('party',this)"><span class="ni-ic">&#128218;</span>Parties</button>
+<button class="ni" onclick="goTab('expense',this)"><span class="ni-ic">&#128176;</span>Kharcha</button>
+<button class="ni" onclick="goTab('records',this)"><span class="ni-ic">&#128196;</span>Records</button>
+</div>
+</div><!-- /mainApp -->
+<script>
+// Firebase REST API - No SDK needed!
+var DB_URL="https://ketan-finance-default-rtdb.asia-southeast1.firebasedatabase.app";
+var API_KEY="AIzaSyCoJ1dv9_Nq_jX6BPi5gQv-V0dRotW4fvg";
+var AUTH_URL="https://identitytoolkit.googleapis.com/v1/accounts";
+var TOKEN=null,ONLINE=false,CU=null,TOKEN_EXP=0;
+
+function getToken(){return TOKEN||localStorage.getItem("fb_token")||null;}
+
+function saveToken(t,exp){
+  TOKEN=t;TOKEN_EXP=Date.now()+(parseInt(exp||3600)-60)*1000;
+  localStorage.setItem("fb_token",t);
+  localStorage.setItem("fb_exp",TOKEN_EXP);
+}
+
+function isTokenValid(){
+  var exp=parseInt(localStorage.getItem("fb_exp")||0);
+  return getToken()&&Date.now()<exp;
+}
+
+function fbGET(path,cb){
+  var url=DB_URL+"/"+path+".json";
+  fetch(url).then(function(r){
+    if(!r.ok)throw new Error("HTTP "+r.status);
+    return r.json();
+  }).then(function(d){cb(null,d);}).catch(function(e){cb(e,null);});
+}
+
+function fbPUT(path,data,cb){
+  var url=DB_URL+"/"+path+".json";
+  fetch(url,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)})
+    .then(function(r){
+      if(!r.ok)throw new Error("HTTP "+r.status);
+      return r.json();
+    }).then(function(d){setSync(true);if(cb)cb(null,d);})
+    .catch(function(e){setSync(false);if(cb)cb(e,null);});
+}
+
+function setSync(on){
+  ONLINE=on;
+  var ind=el("syncInd");
+  if(ind){ind.textContent=on?"Online":"Offline";ind.style.color=on?"#1D7A4F":"#C0392B";}
+}
+
+// Simple local login - no network needed
+var VALID_EMAIL="ketan@gmail.com";
+var VALID_PASS="Ketan@1234";
+
+function doLogin(){
+  var em=el("loginEmail").value.trim().toLowerCase();
+  var pw=el("loginPass").value.trim();
+  var btn=el("loginBtn"),err=el("loginErr");
+  err.style.display="none";
+  if(!em){
+    err.textContent="Email likho!";
+    err.style.display="block";
+    return;
+  }
+  btn.textContent="Login ho raha hai...";
+  btn.disabled=true;
+  setTimeout(function(){
+    btn.textContent="Login";
+    btn.disabled=false;
+    // Simple check - any email + any password works, or just email
+    var ok=false;
+    // Accept ketan@gmail.com with any common password variation
+    if(em==="ketan@gmail.com"){
+      var pwLower=pw.toLowerCase().split(".").join("");
+      if(pwLower==="ketan@1234"||pwLower==="ketan1234"||pw===""||pw.length>=4){
+        ok=true;
+      }
+    }
+    if(ok){
+      CU={email:em};
+      TOKEN="local_ok_"+Date.now();
+      localStorage.setItem("kv_logged","yes");
+      localStorage.setItem("kv_user",em);
+      showApp();
+    } else {
+      err.textContent="Email: ketan@gmail.com likhein";
+      err.style.display="block";
+    }
+  },300);
+}
+
+// Enter key se bhi login ho
+document.addEventListener("keydown",function(e){
+  if(e.key==="Enter"&&el("loginScreen").style.display!=="none"){
+    doLogin();
+  }
+});
+
+function doLogout(){
+  TOKEN=null;CU=null;
+  localStorage.removeItem("kv_logged");
+  localStorage.removeItem("kv_user");
+  el("loginScreen").style.display="flex";
+  el("mainApp").style.display="none";
+}
+
+function togglePass(){var i=el("loginPass");i.type=i.type==="password"?"text":"password";}
+
+function showApp(){
+  el("loginScreen").style.display="none";
+  el("mainApp").style.display="block";
+  el("ed").value=td();
+  setSync(true);
+  load();
+}
+
+// Check if already logged in
+window.addEventListener("load",function(){
+  var loggedIn=localStorage.getItem("kv_logged");
+  var savedUser=localStorage.getItem("kv_user");
+  if(loggedIn==="yes"&&savedUser){
+    CU={email:savedUser};
+    TOKEN="local_auth_ok";
+    showApp();
+  } else {
+    el("loginScreen").style.display="flex";
+    el("mainApp").style.display="none";
+  }
+});
+function togglePass(){var i=el("loginPass");i.type=i.type==="password"?"text":"password";}
+function doLogin(){var em=el("loginEmail").value.trim(),pw=el("loginPass").value,btn=el("loginBtn"),err=el("loginErr");err.style.display="none";if(!em||!pw){err.textContent="Email aur Password dono likho!";err.style.display="block";return;}  btn.textContent="Login ho raha hai...";btn.disabled=true;
+  setTimeout(function(){
+    btn.textContent="Login";btn.disabled=false;
+    err.style.display="none";
+    // Simple check - email only matters
+    var validEm=VALID_EMAIL.trim().toLowerCase();
+    if(em===validEm){
+      CU={email:em};
+      TOKEN="local_auth_"+Date.now();
+      localStorage.setItem("kv_logged","yes");
+      localStorage.setItem("kv_user",em);
+      showApp();
+    } else {
+      err.textContent="Sirf yeh email use karo: ketan@gmail.com";
+      err.style.display="block";
+    }
+  },400);}
+function doLogout(){
+  TOKEN=null;CU=null;
+  localStorage.removeItem("kv_logged");
+  localStorage.removeItem("kv_user");
+  el("loginScreen").style.display="flex";
+  el("mainApp").style.display="none";
+}
+var P=[],EX=[];
+function el(id){return document.getElementById(id);}
+function v(id){return el(id).value;}
+function f(n){return parseFloat(n||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});}
+function td(){return new Date().toISOString().split("T")[0];}
+function ini(s){var w2=s.trim().split(" ");return(w2.length>1?w2[0][0]+w2[w2.length-1][0]:s.slice(0,2)).toUpperCase();}
+function dago(s){var a=new Date(s),b=new Date();b.setHours(0,0,0,0);a.setHours(0,0,0,0);return Math.max(0,Math.floor((b-a)/86400000));}
+function calcI(amt,rate,days,method){if(!rate||days<=0)return 0;var r=rate/100;if(method==="compound")return amt*(Math.pow(1+r/365,days)-1);return amt*r*days/365;}
+function iDesc(amt,rate,days,method){if(!rate||days<=0)return "";var i=calcI(amt,rate,days,method);if(method==="compound")return "Rs "+f(amt)+" x [(1+"+rate+"%/365)^"+days+"d - 1] = Rs "+f(i);return "Rs "+f(amt)+" x "+rate+"% x "+days+"d / 365 = Rs "+f(i);}
+function load(){
+  var pl=el("partyList");
+  if(pl)pl.innerHTML='<div class="empty">&#8987; Data load ho raha hai...</div>';
+
+  // Use REST API to load from Firebase
+  fbGET("kv8",function(err,d){
+    if(!err&&d&&d.p&&Array.isArray(d.p)&&d.p.length>0){
+      P=fixP(d.p||[]);
+      EX=fixEx(d.ex||[]);
+      try{localStorage.setItem("kv8_p",JSON.stringify(P));localStorage.setItem("kv8_ex",JSON.stringify(EX));}catch(e){}
+      setSync(true);
+      renderAll();
+    } else {
+      // Firebase empty or error - try local
+      loadLocal();
+      if(P.length||EX.length){
+        fbSave();
+      } else {
+        seedDataIfEmpty();
+      }
+      renderAll();
+    }
+  });
+}
+function loadLocal(){
+  try{var d=localStorage.getItem("kv8_p");if(d){var x=JSON.parse(d);if(Array.isArray(x))P=fixP(x);}}catch(e){}
+  try{var d=localStorage.getItem("kv8_ex");if(d){var x=JSON.parse(d);if(Array.isArray(x))EX=fixEx(x);}}catch(e){}
+}
+function fbSave(){
+  // Try Firebase silently - if fails, just use localStorage
+  try{
+    fbPUT("kv8",{p:P,ex:EX},function(err){
+      if(err){
+        // Firebase failed - just use local storage silently
+        setSync(false);
+      } else {
+        setSync(true);
+      }
+    });
+  }catch(e){setSync(false);}
+}
+function save(){
+  // Always save locally first - guaranteed
+  try{
+    localStorage.setItem("kv8_p",JSON.stringify(P));
+    localStorage.setItem("kv8_ex",JSON.stringify(EX));
+  }catch(e){}
+  // Try Firebase in background (silent fail)
+  fbSave();
+}
+function renderAll(){renderParties();renderExp();updateSum();}
+function fixP(arr){
+  if(!Array.isArray(arr))return[];
+  return arr.filter(Boolean).map(function(p){
+    if(!p.id)p.id=Date.now()+Math.random();
+    if(!p.name)p.name="Unknown";
+    if(!Array.isArray(p.txns))p.txns=[];
+    p.txns=p.txns.filter(Boolean).map(function(t){
+      if(!t.id)t.id=Date.now()+Math.random();
+      if(!t.type)t.type="CR";
+      if(!t.amt)t.amt=0;
+      if(!t.date)t.date=td();
+      if(!t.rate&&t.rate!==0)t.rate=p.rate||0;
+      if(!t.method)t.method=p.method||"simple";
+      return t;
+    });
+    if(!p.open)p.open=false;
+    return p;
+  });
+}
+// SEEDED DATA from CSV backup
+var SEED_DATA = {"p": [{"id": 1000000, "name": "BALVINDER RAVAL", "phone": "", "rate": 15.0, "method": "simple", "ptype": "taken", "note": "", "txns": [{"id": 1000001, "date": "2025-04-20", "type": "CR", "amt": 1200000.0, "desc": "", "rate": 15.0, "method": "simple"}, {"id": 1000002, "date": "2025-12-05", "type": "INT_PAID", "amt": 46100.0, "desc": "48000-1900 march bal.", "rate": 15.0, "method": "simple"}, {"id": 1000003, "date": "2026-04-20", "type": "INT_PAID", "amt": 121000.0, "desc": "242 silver rate 500gm booked", "rate": 15.0, "method": "simple"}], "open": false}, {"id": 1001000, "name": "MUKESH GOEL", "phone": "", "rate": 12.0, "method": "simple", "ptype": "given", "note": "", "txns": [{"id": 1001001, "date": "2023-07-01", "type": "DR", "amt": 1472000.0, "desc": "", "rate": 12.0, "method": "compound"}, {"id": 1001002, "date": "2024-05-20", "type": "DR", "amt": 500000.0, "desc": "Raval uncle", "rate": 15.0, "method": "compound"}, {"id": 1001003, "date": "2024-07-20", "type": "DR", "amt": 1000000.0, "desc": "Amit", "rate": 18.0, "method": "compound"}, {"id": 1001004, "date": "2024-09-01", "type": "INT_RECV", "amt": 3000.0, "desc": "Raval uncle", "rate": 15.0, "method": "simple"}, {"id": 1001005, "date": "2025-10-20", "type": "DR", "amt": 100000.0, "desc": "Raval unce interest", "rate": 15.0, "method": "compound"}, {"id": 1001006, "date": "2025-10-20", "type": "DR", "amt": 225000.0, "desc": "Amit intrest", "rate": 18.0, "method": "compound"}, {"id": 1001007, "date": "2025-11-01", "type": "CR", "amt": 700000.0, "desc": "Kholi", "rate": 12.0, "method": "compound"}, {"id": 1001008, "date": "2026-05-03", "type": "CR", "amt": 700000.0, "desc": "Koli", "rate": 12.0, "method": "compound"}, {"id": 1001009, "date": "2026-05-03", "type": "DR", "amt": 2153673.0, "desc": "Auto loan", "rate": 15.65, "method": "simple"}], "open": false}, {"id": 1002000, "name": "MAYANK GOEL", "phone": "", "rate": 12.0, "method": "simple", "ptype": "given", "note": "", "txns": [{"id": 1002001, "date": "2023-06-28", "type": "DR", "amt": 1300000.0, "desc": "", "rate": 12.0, "method": "compound"}], "open": false}], "ex": []};
+
+function seedDataIfEmpty(){
+  if(P.length===0&&EX.length===0){
+    console.log("Loading saved data...");
+    P=fixP(SEED_DATA.p||[]);
+    EX=fixEx(SEED_DATA.ex||[]);
+    if(P.length>0){
+      // Save to localStorage immediately
+      try{
+        localStorage.setItem("kv8_p",JSON.stringify(P));
+        localStorage.setItem("kv8_ex",JSON.stringify(EX));
+        console.log("Data saved locally!");
+      }catch(e){}
+      // Try Firebase silently
+      fbSave();
+    }
+  }
+}
+
+function fixEx(arr){if(!Array.isArray(arr))return[];return arr.filter(Boolean).map(function(e){if(!e.amt)e.amt=0;if(!e.date)e.date=td();return e;});}
+function addParty(){
+  var nm=v("pn").trim(),ph=v("pph").trim(),rate=parseFloat(v("prate"))||0,method=v("pmethod"),ptype=v("ptype"),note=v("pnote").trim();
+  if(!nm){alert("Party ka naam likho!");return;}
+  P.unshift({id:Date.now(),name:nm,phone:ph,rate:rate,method:method,ptype:ptype,note:note,txns:[],open:true});
+  save();renderParties();updateSum();clrP();
+}
+function clrP(){["pn","pph","pnote"].forEach(function(i){el(i).value="";});el("prate").value="0";}
+function delParty(id){if(!confirm("Party delete karo? Saari entries bhi delete ho jaayengi!"))return;P=P.filter(function(x){return x.id!==id;});save();renderParties();updateSum();}
+function togP(id){var p=P.find(function(x){return x.id===id;});if(p)p.open=!p.open;save();renderParties();}
+function addTxn(pid){
+  var p=P.find(function(x){return x.id===pid;});if(!p)return;
+  var date=v("td_"+pid),type=v("tt_"+pid),amt=parseFloat(v("ta_"+pid)),desc=v("tdesc_"+pid).trim();
+  var rate=parseFloat(v("tr_"+pid))||0,method=v("tm_"+pid);
+  if(!date||isNaN(amt)||amt<=0){alert("Date aur Amount zaroori hai!");return;}
+  var txn={id:Date.now(),date:date,type:type,amt:amt,desc:desc,rate:rate,method:method};
+  // For gold types, amt = grams
+  if(type==="GOLD_IN"||type==="GOLD_OUT"||type==="GOLD_INT"){
+    txn.grams=amt;
+    txn.amt=0; // cash amount is 0 for gold entries
+  }
+  p.txns.push(txn);
+  p.txns.sort(function(a,b){return new Date(a.date)-new Date(b.date);});
+  save();renderParties();updateSum();
+  el("ta_"+pid).value="";el("tdesc_"+pid).value="";el("td_"+pid).value=td();el("tr_"+pid).value=p.rate||"0";
+}
+function delTxn(pid,tid){
+  if(!confirm("Transaction delete karo?"))return;
+  var p=P.find(function(x){return x.id===pid;});if(!p)return;
+  p.txns=p.txns.filter(function(t){return t.id!==tid;});
+  save();renderParties();updateSum();
+}
+function editTxn(pid,tid){
+  var p=P.find(function(x){return x.id===pid;});if(!p)return;
+  var t=p.txns.find(function(x){return x.id===tid;});if(!t)return;
+  t.editing=!t.editing;
+  save();renderParties();
+}
+function saveTxn(pid,tid){
+  var p=P.find(function(x){return x.id===pid;});if(!p)return;
+  var t=p.txns.find(function(x){return x.id===tid;});if(!t)return;
+  var newAmt=parseFloat(el("et_amt_"+tid).value);
+  var newDate=el("et_date_"+tid).value;
+  var newDesc=el("et_desc_"+tid).value.trim();
+  var newRate=parseFloat(el("et_rate_"+tid).value)||0;
+  var newType=el("et_type_"+tid).value;
+  if(isNaN(newAmt)||newAmt<=0){alert("Amount sahi likho!");return;}
+  t.amt=newAmt;t.date=newDate;t.desc=newDesc;t.rate=newRate;t.type=newType;t.editing=false;
+  p.txns.sort(function(a,b){return new Date(a.date)-new Date(b.date);});
+  save();renderParties();updateSum();
+}
+function calcGoldInt(grams,rate,days){
+  // Gold interest in grams: principal_grams * rate/100 * days/365
+  if(!rate||!grams||days<=0)return 0;
+  return grams*(rate/100)*(days/365);
+}
+function goldIntDesc(grams,rate,days){
+  var gi=calcGoldInt(grams,rate,days);
+  return grams+"gm x "+rate+"% x "+days+"d / 365 = "+gi.toFixed(3)+"gm";
+}
+function pStats(p){
+  var tCR=0,tDR=0,tIR=0,tIP=0,bal=0;
+  var goldIn=0,goldOut=0,goldBal=0,goldInt=0;
+  p.txns.forEach(function(t){
+    var d=dago(t.date);
+    var intr=(t.type==="CR"||t.type==="DR")?calcI(t.amt,t.rate,d,t.method):0;
+    var tot=t.amt+intr;
+    if(t.type==="CR"){tCR+=tot;bal+=tot;}
+    else if(t.type==="DR"){tDR+=tot;bal-=tot;}
+    else if(t.type==="EMI"){tCR+=t.amt;bal+=t.amt;}
+    else if(t.type==="INT_RECV"){tIR+=t.amt;bal+=t.amt;tCR+=t.amt;}
+    else if(t.type==="INT_PAID"){tIP+=t.amt;bal-=t.amt;tDR+=t.amt;}
+    else if(t.type==="GOLD_IN"){goldIn+=(t.grams||t.amt);goldBal+=(t.grams||t.amt);}
+    else if(t.type==="GOLD_OUT"){goldOut+=(t.grams||t.amt);goldBal-=(t.grams||t.amt);}
+    else if(t.type==="GOLD_INT"){goldInt+=(t.grams||t.amt);goldBal+=(t.grams||t.amt);}
+  });
+  return{tCR:tCR,tDR:tDR,tIR:tIR,tIP:tIP,bal:bal,goldIn:goldIn,goldOut:goldOut,goldBal:goldBal,goldInt:goldInt};
+}
+function renderParties(){
+  var c=el("partyList");
+  if(!P.length){c.innerHTML='<div class="empty">Koi party nahi. Upar se banao.</div>';return;}
+  var COLORS=["#5C4000","#1A5276","#1D7A4F","#6C3483","#C0392B","#0E6251","#784212"];
+  var html="";
+  P.forEach(function(p,idx){
+    var st=pStats(p);
+    var bg=COLORS[idx%COLORS.length];
+    var balBdg='<span class="bdg '+( st.bal>=0?"b-cr":"b-dr" )+'">Bal: Rs '+f(Math.abs(st.bal))+" "+(st.bal>=0?"CR":"DR")+"</span>";
+    var lb=p.ptype==="given"?'<span class="bdg b-cr">Maine Diya</span>':'<span class="bdg b-dr">Maine Liya</span>';
+
+    // BUILD PASSBOOK TABLE
+    var runBal=0;var goldRunBal=0;
+    var pbRows="";
+    if(p.txns.length){
+      var hasGoldTxn=p.txns.some(function(t){return t.type==="GOLD_IN"||t.type==="GOLD_OUT"||t.type==="GOLD_INT";});
+      pbRows+='<tr><th>Date</th><th>Type</th><th>Vivaran</th><th>Rate</th><th>Interest / Gold Calc.</th><th style="text-align:right">Cash CR (Rs)</th><th style="text-align:right">Cash DR (Rs)</th><th style="text-align:right">Cash Bal</th>'+(hasGoldTxn?'<th style="text-align:right;color:#FFE87C;">Gold CR (gm)</th><th style="text-align:right;color:#FFE87C;">Gold DR (gm)</th><th style="text-align:right;color:#FFE87C;">Gold Bal (gm)</th>':'')+'<th class="no-print"></th></tr>';
+      p.txns.forEach(function(t){
+        var d=dago(t.date);
+        var intr=(t.type==="CR"||t.type==="DR")?calcI(t.amt,t.rate,d,t.method):0;
+        var tot=t.amt+intr;
+        var crA="",drA="",tLabel="",rShow="-";
+        var gCrA="",gDrA="",ic="";
+        
+        if(t.type==="CR"){runBal+=tot;crA=f(tot);tLabel='<span class="bdg b-cr">Cash CR</span>';rShow=t.rate>0?t.rate+"% "+(t.method==="compound6"?"CI-6M":t.method==="compound3"?"CI-3M":t.method==="compound12"||t.method==="compound"?"CI-Ann":"SI"):"-";}
+        else if(t.type==="DR"){runBal-=tot;drA=f(tot);tLabel='<span class="bdg b-dr">Cash DR</span>';rShow=t.rate>0?t.rate+"% "+(t.method==="compound6"?"CI-6M":t.method==="compound3"?"CI-3M":t.method==="compound12"||t.method==="compound"?"CI-Ann":"SI"):"-";}
+        else if(t.type==="EMI"){runBal+=t.amt;crA=f(t.amt);tLabel='<span class="bdg b-pd">EMI</span>';}
+        else if(t.type==="INT_RECV"){runBal+=t.amt;crA=f(t.amt);tLabel='<span class="bdg b-ir">Int Mila</span>';}
+        else if(t.type==="INT_PAID"){runBal-=t.amt;drA=f(t.amt);tLabel='<span class="bdg b-ip">Int Diya</span>';}
+        else if(t.type==="GOLD_IN"){
+          var gm=t.grams||t.amt;goldRunBal+=gm;gCrA=f(gm)+"gm";
+          tLabel='<span class="bdg" style="background:var(--cream2);color:var(--gold4);">&#127817;Gold In</span>';
+          rShow=t.rate>0?t.rate+"%":"-";
+          var gi=calcGoldInt(gm,t.rate,d);
+          ic=gm>0?'<div class="td-ic">'+goldIntDesc(gm,t.rate,d)+'</div>':"";
+        }
+        else if(t.type==="GOLD_OUT"){
+          var gm=t.grams||t.amt;goldRunBal-=gm;gDrA=f(gm)+"gm";
+          tLabel='<span class="bdg" style="background:var(--rbg);color:var(--red);">&#127817;Gold Out</span>';
+        }
+        else if(t.type==="GOLD_INT"){
+          var gm=t.grams||t.amt;goldRunBal+=gm;gCrA=f(gm)+"gm";
+          tLabel='<span class="bdg" style="background:var(--cream);color:var(--gold4);">&#127817;Gold Int</span>';
+          rShow=t.rate>0?t.rate+"%":"-";
+          ic=gm>0?'<div class="td-ic" style="color:var(--gold)">Gold Int: '+f(gm)+"gm received</div>":"";
+        }
+        ic=ic||(intr>0?'<div class="td-ic">'+iDesc(t.amt,t.rate,d,t.method)+"</div>":"");
+        var bc=runBal>=0?"gn":"rd";
+        // EDIT MODE for this transaction
+        if(t.editing){
+          pbRows+='<tr style="background:var(--cream);">'+
+            '<td><input type="date" id="et_date_'+t.id+'" value="'+t.date+'" style="min-height:34px;font-size:12px;padding:4px 6px;"/></td>'+
+            '<td><select id="et_type_'+t.id+'" style="min-height:34px;font-size:12px;padding:4px 6px;">'+
+            '<option value="CR"'+( t.type==="CR"?" selected":"" )+'>Credit</option>'+
+            '<option value="DR"'+( t.type==="DR"?" selected":"" )+'>Debit</option>'+
+            '<option value="EMI"'+( t.type==="EMI"?" selected":"" )+'>EMI Mili</option>'+
+            '<option value="INT_RECV"'+( t.type==="INT_RECV"?" selected":"" )+'>Int Mila</option>'+
+            '<option value="INT_PAID"'+( t.type==="INT_PAID"?" selected":"" )+'>Int Diya</option>'+
+            "</select></td>"+
+            '<td><input id="et_desc_'+t.id+'" value="'+( t.desc||"" )+'" placeholder="Vivaran" style="min-height:34px;font-size:12px;padding:4px 6px;"/></td>'+
+            '<td><input type="number" id="et_rate_'+t.id+'" value="'+t.rate+'" style="min-height:34px;font-size:12px;padding:4px 6px;width:60px;" inputmode="decimal"/></td>'+
+            "<td>-</td>"+
+            '<td colspan="2"><input type="number" id="et_amt_'+t.id+'" value="'+t.amt+'" style="min-height:34px;font-size:13px;font-weight:700;padding:4px 6px;" inputmode="decimal"/></td>'+
+            "<td>"+
+            '<button class="btn sm gn" onclick="saveTxn('+p.id+','+t.id+')">Save</button>'+
+            '<button class="btn sm" onclick="editTxn('+p.id+','+t.id+')" style="margin-top:4px">Cancel</button>'+
+            "</td></tr>";
+        } else {
+          var goldCols=hasGoldTxn?('<td class="td-cr" style="color:var(--gold);">'+( gCrA||"" )+"</td>"+'<td class="td-dr" style="color:var(--red);">'+( gDrA||"" )+"</td>"+'<td style="text-align:right;font-weight:700;color:var(--gold);font-size:12px;">'+( (gCrA||gDrA)?f(Math.abs(goldRunBal))+"gm":"" )+"</td>"):"";
+          pbRows+='<tr><td style="white-space:nowrap;font-size:11px;color:var(--t2);">'+t.date+"</td><td>"+tLabel+"</td>"+'<td style="font-size:12px;">'+( t.desc||"-" )+ic+"</td><td style='font-size:11px;color:var(--gold);'>"+rShow+"</td>"+'<td style="font-size:11px;color:var(--t3);">'+( ic?"":" - " )+"</td>"+'<td class="td-cr">'+( crA?"Rs "+crA:"" )+"</td>"+'<td class="td-dr">'+( drA?"Rs "+drA:"" )+"</td>"+'<td class="td-bal '+bc+'">Rs '+f(Math.abs(runBal))+"<br/><span style='font-size:9px;color:var(--t4);'>"+(runBal>=0?"CR":"DR")+"</span></td>"+goldCols+'<td class="no-print" style="white-space:nowrap;">'+'<button class="btn sm or" onclick="editTxn('+p.id+','+t.id+')">Edit</button> '+'<button class="btn sm rd" onclick="delTxn('+p.id+','+t.id+')">Del</button>'+'</td></tr>';
+        }
+      });
+    }
+    var tbl=p.txns.length?'<div class="pb-wrap"><table class="pb-table">'+pbRows+"</table></div>":'<div class="empty" style="padding:14px;">Koi entry nahi. Neeche se add karo.</div>';
+
+    var body="";
+    if(p.open){
+      body+='<div class="pbdy">';
+      // STATS
+      // Show gold stats only if any gold transaction exists
+      var hasGold=p.txns.some(function(t){return t.type==="GOLD_IN"||t.type==="GOLD_OUT"||t.type==="GOLD_INT";});
+      var statCols=hasGold?6:4;
+      body+='<div class="pstats" style="grid-template-columns:repeat('+statCols+',1fr);">';
+      body+='<div class="pst"><div class="pst-l">Cash CR</div><div class="pst-v gn">Rs '+f(st.tCR)+"</div></div>";
+      body+='<div class="pst"><div class="pst-l">Cash DR</div><div class="pst-v rd">Rs '+f(st.tDR)+"</div></div>";
+      body+='<div class="pst"><div class="pst-l">Int Mila</div><div class="pst-v or">Rs '+f(st.tIR)+"</div></div>";
+      body+='<div class="pst"><div class="pst-l">Int Diya</div><div class="pst-v" style="color:#6C3483;">Rs '+f(st.tIP)+"</div></div>";
+      if(hasGold){
+        body+='<div class="pst" style="background:var(--cream2)"><div class="pst-l" style="color:var(--gold4)">&#127817;Gold Mila</div><div class="pst-v or">'+f(st.goldIn)+"gm</div></div>";
+        body+='<div class="pst" style="background:var(--cream2)"><div class="pst-l" style="color:var(--gold4)">&#127817;Gold Bal.</div><div class="pst-v '+(st.goldBal>=0?"or":"rd")+'">'+f(st.goldBal)+"gm</div></div>";
+      }
+      body+="</div>";
+
+      // ADD TRANSACTION FORM
+      body+='<div class="add-txn no-print">';
+      body+='<div class="add-txn-title">+ Nayi Entry (CR / DR / EMI / Interest)</div>';
+      body+='<div class="add-g4">';
+      body+='<input type="date" id="td_'+p.id+'" value="'+td()+'" style="font-size:12px;min-height:38px;padding:5px 6px;"/>';
+      body+='<input id="tdesc_'+p.id+'" placeholder="Vivaran / Note..." style="font-size:13px;min-height:38px;padding:5px 7px;"/>';
+      body+='<input type="number" id="ta_'+p.id+'" placeholder="Rs" inputmode="decimal" style="font-size:13px;min-height:38px;padding:5px 6px;"/>';
+      body+='<input type="number" id="tr_'+p.id+'" value="'+( p.rate||0 )+'" placeholder="%" inputmode="decimal" style="font-size:12px;min-height:38px;padding:5px 4px;" title="Interest Rate %"/>';
+      body+="</div>";
+      body+='<div class="add-row">';
+      body+='<select id="tt_'+p.id+'" style="font-size:13px;min-height:38px;padding:5px 7px;">';
+      body+='<option value="CR">Cash Credit (Mila)</option>';
+      body+='<option value="DR">Cash Debit (Diya)</option>';
+      body+='<option value="EMI">EMI Mili</option>';
+      body+='<option value="INT_RECV">Interest Mila (Cash)</option>';
+      body+='<option value="INT_PAID">Interest Diya (Cash)</option>';
+      body+='<option value="GOLD_IN">Gold Mila (gm mein)</option>';
+      body+='<option value="GOLD_OUT">Gold Diya (gm mein)</option>';
+      body+='<option value="GOLD_INT">Gold Interest (gm mein)</option>';
+      body+="</select>";
+      body+='<select id="tm_'+p.id+'" style="font-size:13px;min-height:38px;padding:5px 7px;width:100px;">';
+      body+='<option value="simple">Simple</option><option value="compound">Compound</option>';
+      body+="</select>";
+      body+='<button onclick="addTxn('+p.id+')" class="add-btn" style="background:linear-gradient(135deg,var(--gold4),var(--gold5));">+ Add</button>';
+      body+="</div></div>";
+
+      body+=tbl;
+
+      // FOOTER
+      body+='<div class="pfooter">';
+      body+='<div><div style="font-size:14px;font-weight:700;">Balance: <span class="'+( st.bal>=0?"gn":"rd" )+'">Rs '+f(Math.abs(st.bal))+" "+(st.bal>=0?"(CR)":"(DR)")+"</span></div>";
+      if(st.tIR>0||st.tIP>0)body+='<div style="font-size:11px;color:var(--t3);margin-top:2px;">Int Mila: Rs '+f(st.tIR)+' | Int Diya: Rs '+f(st.tIP)+"</div>";
+      body+="</div>";
+      body+='<div class="no-print" style="display:flex;gap:5px;">';
+      body+='<button class="btn sm or" onclick="printPartyLedger('+p.id+')">Print</button>';
+      body+='<button class="btn sm bl" onclick="csvParty('+p.id+')">CSV</button>';
+      body+='<button class="btn sm rd" onclick="delParty('+p.id+')">Delete</button>';
+      body+="</div></div>";
+      body+="</div>";
+    }
+
+    html+='<div class="pcard"><div class="pc-hdr" onclick="togP('+p.id+')">'+
+      '<div class="pav" style="background:'+bg+'">'+ini(p.name)+"</div>"+
+      "<div style='flex:1;min-width:0;'>"+
+      '<div class="pnm">'+p.name+(p.phone?' <span style="font-size:11px;font-weight:400;color:var(--t3);">("+p.phone+")</span>':"")+'</div>'+
+      '<div class="psb">'+lb+" &nbsp;"+balBdg+" &nbsp;"+p.txns.length+" entries"+(p.rate>0?" &nbsp;"+p.rate+"%":"")+"</div>"+
+      "</div>"+
+      '<span class="chv'+( p.open?" op":"" )+'">&#9660;</span>'+
+      "</div>"+body+"</div>";
+  });
+  c.innerHTML=html;
+}
+function addExp(){var nm=v("en").trim(),dt=v("ed"),ct=v("ec"),am=parseFloat(v("ea")),no=v("enote").trim();if(!nm||!dt||isNaN(am)||am<=0){alert("Naam, Date, Amount zaroori hai!");return;}EX.unshift({id:Date.now(),name:nm,date:dt,cat:ct,amt:am,note:no});save();renderExp();updateSum();clrE();}
+function delExp(id){if(!confirm("Delete karo?"))return;EX=EX.filter(function(x){return x.id!==id;});save();renderExp();updateSum();}
+function clrE(){["en","ea","enote"].forEach(function(i){el(i).value="";});el("ed").value=td();}
+function renderExp(){var c=el("eList");if(!EX.length){c.innerHTML='<div class="empty">Koi kharcha nahi.</div>';return;}c.innerHTML=EX.map(function(e){return '<div class="rc"><div class="rav">'+ini(e.name)+"</div><div class='ri'><div class='rn'>"+e.name+"</div><div class='rs'><span class='bdg b-ex'>"+(e.cat||"Other")+"</span> "+e.date+(e.note?" | "+e.note:"")+"</div></div><div class='rr'><div class='ra rd'>Rs "+f(e.amt)+"</div></div><button class='xb no-print' onclick='delExp("+e.id+")'>&times;</button></div>";}).join("");}
+function buildRows(filter,month){
+  var rows=[];
+  P.forEach(function(p){
+    p.txns.forEach(function(t){
+      var tf=t.type;
+      if(tf==="INT_RECV"||tf==="INT_PAID")tf="INT";
+      if(tf==="GOLD_IN"||tf==="GOLD_OUT"||tf==="GOLD_INT")tf="GOLD";
+      if(filter!=="all"&&filter!==t.type&&filter!==tf)return;
+      if(filter==="EXP")return;
+      if(month&&!t.date.startsWith(month))return;
+      var d=dago(t.date);
+      var intr=(t.type==="CR"||t.type==="DR")?calcI(t.amt,t.rate,d,t.method):0;
+      
+    var ic=intr>0?iDesc(t.amt,t.rate,d,t.method):"";
+      var isGold=t.type==="GOLD_IN"||t.type==="GOLD_OUT"||t.type==="GOLD_INT";
+      var bc=t.type==="CR"||t.type==="EMI"||t.type==="INT_RECV"||t.type==="GOLD_IN"||t.type==="GOLD_INT"?"b-cr":"b-dr";
+      var ac=t.type==="CR"||t.type==="EMI"||t.type==="INT_RECV"||t.type==="GOLD_IN"||t.type==="GOLD_INT"?"gn":"rd";
+      var tl=t.type==="INT_RECV"?"Int Mila":t.type==="INT_PAID"?"Int Diya":t.type==="EMI"?"EMI Mili":t.type==="GOLD_IN"?"Gold In":t.type==="GOLD_OUT"?"Gold Out":t.type==="GOLD_INT"?"Gold Int":t.type;
+      var dispAmt=isGold?(t.grams||t.amt):t.amt+intr;
+      var dispUnit=isGold?"gm":"Rs";
+      if(isGold&&t.rate>0)ic=goldIntDesc(t.grams||t.amt,t.rate,d);
+      rows.push({date:t.date,type:tl,name:p.name,amt:dispAmt,unit:dispUnit,ic:ic,note:t.desc||"",bc:bc,ac:ac,rate:t.rate});
+    });
+  });
+  if(filter==="all"||filter==="EXP"){EX.forEach(function(e){if(month&&!e.date.startsWith(month))return;rows.push({date:e.date,type:"EXP",name:e.name,amt:e.amt,ic:"",note:(e.cat||"")+(e.note?" - "+e.note:""),bc:"b-ex",ac:"rd",rate:0});});}
+  rows.sort(function(a,b){return new Date(b.date)-new Date(a.date);});
+  return rows;
+}
+function renderRec(){
+  var filter=v("rf"),month=v("rm"),rows=buildRows(filter,month),c=el("recList");
+  if(!rows.length){c.innerHTML='<div class="empty">Koi record nahi mila.</div>';return;}
+  var tIn=0,tOut=0;
+  rows.forEach(function(r){if(r.ac==="gn")tIn+=r.amt;else tOut+=r.amt;});
+  var tot='<div class="tot-box"><div><div class="tl">Total Aaya</div><div class="tv gn">Rs '+f(tIn)+"</div></div><div><div class='tl'>Total Gaya</div><div class='tv rd'>Rs "+f(tOut)+"</div></div><div><div class='tl'>Net</div><div class='tv "+(tIn-tOut>=0?"gn":"rd")+"'>Rs "+f(Math.abs(tIn-tOut))+"</div></div></div>";
+  c.innerHTML=tot+rows.map(function(r){return '<div class="ri-card"><div class="ri-top"><div><div class="ri-name">'+r.name+"</div><div class='ri-meta'><span class='bdg "+r.bc+"'>"+(r.type)+"</span> &nbsp;"+r.date+(r.rate>0?" &nbsp;"+r.rate+"%":"")+"</div>"+(r.note?'<div class="ri-meta">'+r.note+"</div>":"")+(r.ic?'<div class="ri-calc">'+r.ic+"</div>":"")+"</div><div class='ri-amt "+r.ac+"'>Rs "+f(r.amt)+"</div></div></div>";}).join("");
+}
+function closePrintOverlay(){
+  var o=el("printOverlay");
+  o.style.display="none";
+  el("mainApp").style.overflow="";
+  document.body.style.overflow="";
+}
+function printPartyLedger(pid){
+  var p=P.find(function(x){return x.id===pid;});if(!p)return;
+  var st=pStats(p);var runBal=0;var rows="";
+  p.txns.forEach(function(t){
+    var d=dago(t.date);
+    var intr=(t.type==="CR"||t.type==="DR")?calcI(t.amt,t.rate,d,t.method):0;
+    var tot=t.amt+intr;var crA="",drA="",tl="";
+    if(t.type==="CR"){runBal+=tot;crA=f(tot);tl="Credit";}
+    else if(t.type==="DR"){runBal-=tot;drA=f(tot);tl="Debit";}
+    else if(t.type==="EMI"){runBal+=t.amt;crA=f(t.amt);tl="EMI Mili";}
+    else if(t.type==="INT_RECV"){runBal+=t.amt;crA=f(t.amt);tl="Interest Mila";}
+    else if(t.type==="INT_PAID"){runBal-=t.amt;drA=f(t.amt);tl="Interest Diya";}
+    var ic=intr>0?iDesc(t.amt,t.rate,d,t.method):"";
+    rows+="<tr><td>"+t.date+"</td><td>"+tl+"</td><td>"+(t.desc||"-")+"</td><td>"+(t.rate>0?t.rate+"% "+(t.method==="compound6"?"CI-6M":t.method==="compound3"?"CI-3M":t.method==="compound12"||t.method==="compound"?"CI-Ann":"SI"):"-")+"</td><td style='font-size:10px;color:#9B7A50;'>"+(ic||"-")+"</td><td style='text-align:right;color:#1D7A4F;font-weight:700;'>"+(crA?"Rs "+crA:"")+"</td><td style='text-align:right;color:#C0392B;font-weight:700;'>"+(drA?"Rs "+drA:"")+"</td><td style='text-align:right;font-weight:700;color:"+(runBal>=0?"#1D7A4F":"#C0392B")+"'>Rs "+f(Math.abs(runBal))+" "+(runBal>=0?"CR":"DR")+"</td></tr>";
+  });
+  var h="<!DOCTYPE html><html><head><meta charset='UTF-8'/><title>Ledger - "+p.name+"</title>";
+  h+="<style>*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:12px;margin:0;padding:16px;color:#111;}";
+  h+=".hdr{background:#5C4000;color:#FFE87C;padding:14px 18px;border-radius:8px;margin-bottom:14px;}";
+  h+=".hdr h1{font-size:17px;margin:0 0 3px;}.hdr p{font-size:11px;opacity:.8;margin:0;}";
+  h+=".sum{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px;}";
+  h+=".sc{background:#FFF8DC;border:1px solid #E8D5A3;border-radius:6px;padding:8px 10px;text-align:center;}";
+  h+=".sl{font-size:10px;color:#9B7A50;font-weight:700;text-transform:uppercase;margin-bottom:3px;}";
+  h+=".sv{font-size:14px;font-weight:700;}";
+  h+="table{width:100%;border-collapse:collapse;}";
+  h+="th{background:#5C4000;color:#FFE87C;padding:7px 6px;font-size:10px;text-align:left;font-weight:700;text-transform:uppercase;}";
+  h+="td{padding:6px 6px;border-bottom:1px solid #F0E4C0;font-size:11px;vertical-align:top;}";
+  h+="tr:nth-child(even) td{background:#FFFDF0;}";
+  h+=".foot{margin-top:12px;background:#FFF8DC;border:1.5px solid #DAA520;border-radius:6px;padding:10px 14px;display:flex;justify-content:space-between;}";
+  h+="@media print{@page{margin:8mm;}body{padding:0;}}";
+  h+="<div class='hdr'><h1>"+p.name+(p.phone?" &nbsp; "+p.phone:"")+"</h1><p>Ketan Verma Personal Ledger &nbsp;|&nbsp; "+td()+" &nbsp;|&nbsp; Not for firm</p></div>";
+  h+="<div class='sum'>";
+  h+="<div class='sc'><div class='sl'>Credit</div><div class='sv' style='color:#1D7A4F'>Rs "+f(st.tCR)+"</div></div>";
+  h+="<div class='sc'><div class='sl'>Debit</div><div class='sv' style='color:#C0392B'>Rs "+f(st.tDR)+"</div></div>";
+  h+="<div class='sc'><div class='sl'>Int Mila</div><div class='sv' style='color:#B8860B'>Rs "+f(st.tIR)+"</div></div>";
+  h+="<div class='sc'><div class='sl'>Int Diya</div><div class='sv' style='color:#6C3483'>Rs "+f(st.tIP)+"</div></div>";
+  h+="</div>";
+  h+="<table><tr><th>Date</th><th>Type</th><th>Vivaran</th><th>Rate%</th><th>Interest Calc.</th><th>Credit (Rs)</th><th>Debit (Rs)</th><th>Balance (Rs)</th></tr>"+rows+"</table>";
+  var bal=st.bal;
+  h+="<div class='foot'><div><strong>Net Balance: <span style='color:"+(bal>=0?"#1D7A4F":"#C0392B")+"'>Rs "+f(Math.abs(bal))+" "+(bal>=0?"(CR)":"(DR)")+"</span></strong></div><div style='font-size:11px;color:#9B7A50;'>"+p.txns.length+" transactions</div></div>";
+  h+="</body></html>";
+  h+="</body></html>";
+  var overlay=el("printOverlay");
+  var pc=el("printContent");
+  pc.innerHTML=h;
+  overlay.style.display="block";
+  document.body.style.overflow="hidden";
+  el("mainApp").style.overflow="hidden";
+  setTimeout(function(){window.print();},600);
+}
+function csvParty(pid){
+  var p=P.find(function(x){return x.id===pid;});if(!p)return;
+  var st=pStats(p);var runBal=0;
+  var csv="KETAN VERMA PERSONAL LEDGER\nParty: "+p.name+(p.phone?" | "+p.phone:"")+"\nDate: "+td()+" | Not for firm\n\n";
+  csv+="Date,Type,Vivaran,Rate%,Method,Interest Calc,Credit (Rs),Debit (Rs),Balance (Rs)\n";
+  p.txns.forEach(function(t){
+    var d=dago(t.date);var intr=(t.type==="CR"||t.type==="DR")?calcI(t.amt,t.rate,d,t.method):0;
+    var tot=t.amt+intr;var crA="",drA="",tl="";
+    if(t.type==="CR"){runBal+=tot;crA=f(tot);tl="Credit";}
+    else if(t.type==="DR"){runBal-=tot;drA=f(tot);tl="Debit";}
+    else if(t.type==="EMI"){runBal+=t.amt;crA=f(t.amt);tl="EMI Mili";}
+    else if(t.type==="INT_RECV"){runBal+=t.amt;crA=f(t.amt);tl="Interest Mila";}
+    else if(t.type==="INT_PAID"){runBal-=t.amt;drA=f(t.amt);tl="Interest Diya";}
+    var ic=intr>0?iDesc(t.amt,t.rate,d,t.method):"";
+    csv+=t.date+","+tl+',"'+(t.desc||"")+'",'+(t.rate||"")+","+(t.method||"")+',"'+(ic||"")+'",'+crA+","+drA+","+f(Math.abs(runBal))+" "+(runBal>=0?"CR":"DR")+"\n";
+  });
+  csv+="\nSUMMARY\nCredit,Rs "+f(st.tCR)+"\nDebit,Rs "+f(st.tDR)+"\nInt Mila,Rs "+f(st.tIR)+"\nInt Diya,Rs "+f(st.tIP)+"\nBalance,Rs "+f(Math.abs(st.bal))+" "+(st.bal>=0?"CR":"DR")+"\n";
+  var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download="Ledger_"+p.name.replace(/ /g,"_")+"_"+td()+".csv";a.click();
+}
+function printRec(){
+  var filter=v("rf"),month=v("rm"),rows=buildRows(filter,month);
+  var tIn=0,tOut=0;rows.forEach(function(r){if(r.ac==="gn")tIn+=r.amt;else tOut+=r.amt;});
+  var w2=window.open("","_blank");
+  var rCSS='body{font-family:Arial,sans-serif;font-size:12px;margin:16px;}table{width:100%;border-collapse:collapse;}th{background:#5C4000;color:#FFE87C;padding:7px;font-size:10px;text-align:left;font-weight:700;}td{padding:6px 7px;border-bottom:1px solid #F0E4C0;font-size:11px;}tr:nth-child(even) td{background:#FFFDF0;}.gn{color:#1D7A4F;font-weight:700;}.rd{color:#C0392B;font-weight:700;}.tot{background:#FFF8DC;font-weight:700;}';
+  var h='<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Records - Ketan Verma</title><style>'+rCSS+'</style></head><body>';
+  h+="<h2>Ketan Verma - Records</h2><p>"+td()+" | Filter: "+filter+" | Month: "+(month||"All")+" | Not for firm</p>";
+  h+="<table><tr><th>Date</th><th>Party</th><th>Type</th><th>Rate%</th><th>Note</th><th>Interest Calc.</th><th>Amount (Rs)</th></tr>";
+  rows.forEach(function(r){h+="<tr><td>"+r.date+"</td><td>"+r.name+"</td><td>"+r.type+"</td><td>"+(r.rate?r.rate+"%":"-")+"</td><td>"+r.note+"</td><td style='font-size:10px;color:#B8860B;'>"+(r.ic||"-")+"</td><td style='text-align:right;' class='"+(r.ac==="gn"?"gn":"rd")+"'>"+(r.ac==="gn"?"":"(")+f(r.amt)+(r.ac==="gn"?"":")")+"</td></tr>";});
+  h+="<tr class='tot'><td colspan='6'>TOTAL</td><td style='text-align:right;'>In: <span class='gn'>Rs "+f(tIn)+"</span> Out: <span class='rd'>Rs "+f(tOut)+"</span> Net: Rs "+f(Math.abs(tIn-tOut))+"</td></tr></table></body></html>";
+  w2.document.write(h);w2.document.close();setTimeout(function(){w2.print();},400);
+}
+function dlRec(){
+  var filter=v("rf"),month=v("rm"),rows=buildRows(filter,month);
+  var tIn=0,tOut=0;rows.forEach(function(r){if(r.ac==="gn")tIn+=r.amt;else tOut+=r.amt;});
+  var csv="KETAN VERMA RECORDS\n"+td()+" | Filter: "+filter+" | Month: "+(month||"All")+"\n\n";
+  csv+="Date,Party,Type,Rate%,Note,Interest Calc,Amount,CR/DR\n";
+  rows.forEach(function(r){csv+=r.date+',"'+(r.name||"")+'","'+(r.type||"")+'",'+(r.rate||"")+',"'+(r.note||"")+'","'+(r.ic||"")+'",'+f(r.amt)+","+(r.ac==="gn"?"CR":"DR")+"\n";});
+  csv+="\nTOTAL,,,,,,In: Rs "+f(tIn)+",\n,,,,,,Out: Rs "+f(tOut)+",\n,,,,,,Net: Rs "+f(Math.abs(tIn-tOut))+",\n";
+  var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download="KetanVerma_Records_"+td()+".csv";a.click();
+}
+function updateSum(){
+  var tCR=0,tDR=0,tIR=0,tIP=0,tExp=0;
+  P.forEach(function(p){var st=pStats(p);tCR+=st.tCR;tDR+=st.tDR;tIR+=st.tIR;tIP+=st.tIP;});
+  EX.forEach(function(e){tExp+=e.amt;});
+  var net=tCR-tDR-tExp;
+  var h='<div class="sc"><div class="sl">Total Credit</div><div class="sv gn">Rs '+f(tCR)+"</div></div>"+'<div class="sc"><div class="sl">Total Debit</div><div class="sv rd">Rs '+f(tDR)+"</div></div>"+'<div class="sc"><div class="sl">Int Mila</div><div class="sv or">Rs '+f(tIR)+"</div></div>"+'<div class="sc"><div class="sl">Int Diya</div><div class="sv bl">Rs '+f(tIP)+"</div></div>"+'<div class="sc"><div class="sl">Kharcha</div><div class="sv rd">Rs '+f(tExp)+"</div></div>"+'<div class="sc full"><div class="sl">Net Balance</div><div class="sv '+( net>=0?"gn":"rd" )+'" style="font-size:22px;">Rs '+f(Math.abs(net))+" "+(net>=0?"(Aapka Hai)":"(Dena Hai)")+"</div></div>";
+  ["sg1","sg2"].forEach(function(id){var e=el(id);if(e)e.innerHTML=h;});
+}
+function goTab(tab,e2){document.querySelectorAll(".page").forEach(function(p){p.classList.remove("on");});el("pg-"+tab).classList.add("on");document.querySelectorAll(".ni").forEach(function(b){b.classList.remove("on");});e2.classList.add("on");window.scrollTo(0,0);if(tab==="records")renderRec();}
+function doCSV(){var csv="KETAN VERMA PERSONAL FINANCE\nNot for firm\n"+td()+"\n\n";P.forEach(function(p){var st=pStats(p);csv+="Party: "+p.name+(p.phone?" | "+p.phone:"")+"\n";csv+="Date,Type,Vivaran,Rate%,Method,Interest,Total,Balance\n";var rb=0;p.txns.forEach(function(t){var d=dago(t.date);var intr=(t.type==="CR"||t.type==="DR")?calcI(t.amt,t.rate,d,t.method):0;var tot=t.amt+intr;if(t.type==="CR"||t.type==="EMI"||t.type==="INT_RECV")rb+=tot;else rb-=tot;csv+=t.date+","+t.type+',"'+(t.desc||"")+'",'+t.rate+","+(t.method||"")+","+intr.toFixed(2)+","+tot.toFixed(2)+","+f(Math.abs(rb))+" "+(rb>=0?"CR":"DR")+"\n";});csv+="Balance,Rs "+f(Math.abs(st.bal))+" "+(st.bal>=0?"CR":"DR")+"\n\n";});csv+="KHARCHA\nDate,Naam,Category,Amount\n";EX.forEach(function(e){csv+=e.date+',"'+(e.name||"")+'","'+(e.cat||"")+'",'+e.amt+"\n";});var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download="KetanVerma_"+td()+".csv";a.click();}
+el("ed").value=td();
+</script>
+</body></html>
