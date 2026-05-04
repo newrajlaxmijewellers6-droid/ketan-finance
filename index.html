@@ -121,13 +121,13 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .tl{font-size:11px;color:var(--t3);font-weight:700;margin-bottom:2px;text-transform:uppercase;}.tv{font-size:16px;font-weight:700;}
 .empty{text-align:center;color:var(--t4);padding:28px;font-size:14px;}
 @media print{
+  body{background:#fff !important;}
   .nav,.top,.add-txn,.brow,.xb,.flt,.no-print,.no-print-overlay{display:none!important;}
-  body{background:#fff;}
-  .page{display:block!important;padding:0;}
-  #printOverlay{position:static!important;padding:0!important;}
   #loginScreen{display:none!important;}
-  #mainApp{display:block!important;}
-  .pb-table th{background:#5C4000!important;color:#FFE87C!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .page,.nav{display:none!important;}
+  #printOverlay{display:block!important;position:fixed!important;inset:0!important;padding:16px!important;overflow:auto!important;background:#fff!important;z-index:1!important;}
+  .no-print-overlay{display:none!important;}
+  @page{margin:8mm;size:A4 landscape;}
 }
 </style>
 </head><body>
@@ -155,7 +155,7 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
   <div style="max-width:600px;margin:0 auto;">
     <div style="display:flex;gap:8px;margin-bottom:16px;" class="no-print-overlay">
       <button onclick="closePrintOverlay()" style="background:#C0392B;color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:14px;font-weight:700;cursor:pointer;">&#x2715; Close</button>
-      <button onclick="window.print()" style="background:#5C4000;color:#FFE87C;border:none;border-radius:8px;padding:10px 18px;font-size:14px;font-weight:700;cursor:pointer;">&#128424; Print / Save PDF</button>
+      <button onclick="doPrintOverlay()" style="background:#5C4000;color:#FFE87C;border:none;border-radius:8px;padding:10px 18px;font-size:14px;font-weight:700;cursor:pointer;">&#128424; Print / Save PDF</button>
     </div>
     <div id="printContent"></div>
   </div>
@@ -532,9 +532,15 @@ function pStats(p){
     else if(t.type==="EMI"){tCR+=t.amt;bal+=t.amt;}
     else if(t.type==="INT_RECV"){tIR+=t.amt;bal+=t.amt;tCR+=t.amt;}
     else if(t.type==="INT_PAID"){tIP+=t.amt;bal-=t.amt;tDR+=t.amt;}
-    else if(t.type==="GOLD_IN"){goldIn+=(t.grams||t.amt);goldBal+=(t.grams||t.amt);}
+    else if(t.type==="GOLD_IN"){
+      var gm2=t.grams||t.amt;
+      goldIn+=gm2;goldBal+=gm2;
+      // Auto-add accrued gold interest
+      if(t.rate>0){var gi2=calcGoldInt(gm2,t.rate,dago(t.date));goldInt+=gi2;goldBal+=gi2;}
+    }
     else if(t.type==="GOLD_OUT"){goldOut+=(t.grams||t.amt);goldBal-=(t.grams||t.amt);}
     else if(t.type==="GOLD_INT"){goldInt+=(t.grams||t.amt);goldBal+=(t.grams||t.amt);}
+    // Note: auto-calculated gold interest is shown separately, not added to balance
   });
   return{tCR:tCR,tDR:tDR,tIR:tIR,tIP:tIP,bal:bal,goldIn:goldIn,goldOut:goldOut,goldBal:goldBal,goldInt:goldInt};
 }
@@ -569,18 +575,18 @@ function renderParties(){
         else if(t.type==="INT_PAID"){runBal-=t.amt;drA=f(t.amt);tLabel='<span class="bdg b-ip">Int Diya</span>';}
         else if(t.type==="GOLD_IN"){
           var gm=t.grams||t.amt;goldRunBal+=gm;gCrA=f(gm)+"gm";
-          tLabel='<span class="bdg" style="background:var(--cream2);color:var(--gold4);">&#127817;Gold In</span>';
+          tLabel='<span class="bdg" style="background:var(--cream2);color:var(--gold4);">&#x1F4B0;Gold In</span>';
           rShow=t.rate>0?t.rate+"%":"-";
           var gi=calcGoldInt(gm,t.rate,d);
           ic=gm>0?'<div class="td-ic">'+goldIntDesc(gm,t.rate,d)+'</div>':"";
         }
         else if(t.type==="GOLD_OUT"){
           var gm=t.grams||t.amt;goldRunBal-=gm;gDrA=f(gm)+"gm";
-          tLabel='<span class="bdg" style="background:var(--rbg);color:var(--red);">&#127817;Gold Out</span>';
+          tLabel='<span class="bdg" style="background:var(--rbg);color:var(--red);">&#x1F4B0;Gold Out</span>';
         }
         else if(t.type==="GOLD_INT"){
           var gm=t.grams||t.amt;goldRunBal+=gm;gCrA=f(gm)+"gm";
-          tLabel='<span class="bdg" style="background:var(--cream);color:var(--gold4);">&#127817;Gold Int</span>';
+          tLabel='<span class="bdg" style="background:var(--cream);color:var(--gold4);">&#x1F4B0;Gold Int</span>';
           rShow=t.rate>0?t.rate+"%":"-";
           ic=gm>0?'<div class="td-ic" style="color:var(--gold)">Gold Int: '+f(gm)+"gm received</div>":"";
         }
@@ -626,8 +632,8 @@ function renderParties(){
       body+='<div class="pst"><div class="pst-l">Int Mila</div><div class="pst-v or">Rs '+f(st.tIR)+"</div></div>";
       body+='<div class="pst"><div class="pst-l">Int Diya</div><div class="pst-v" style="color:#6C3483;">Rs '+f(st.tIP)+"</div></div>";
       if(hasGold){
-        body+='<div class="pst" style="background:var(--cream2)"><div class="pst-l" style="color:var(--gold4)">&#127817;Gold Mila</div><div class="pst-v or">'+f(st.goldIn)+"gm</div></div>";
-        body+='<div class="pst" style="background:var(--cream2)"><div class="pst-l" style="color:var(--gold4)">&#127817;Gold Bal.</div><div class="pst-v '+(st.goldBal>=0?"or":"rd")+'">'+f(st.goldBal)+"gm</div></div>";
+        body+='<div class="pst" style="background:var(--cream2)"><div class="pst-l" style="color:var(--gold4)">&#x1F4B0;Gold Mila</div><div class="pst-v or">'+f(st.goldIn)+"gm</div></div>";
+        body+='<div class="pst" style="background:var(--cream2)"><div class="pst-l" style="color:var(--gold4)">&#x1F4B0;Gold Bal.</div><div class="pst-v '+(st.goldBal>=0?"or":"rd")+'">'+f(st.goldBal)+"gm</div></div>";
       }
       body+="</div>";
 
@@ -729,135 +735,159 @@ function closePrintOverlay(){
   el("mainApp").style.overflow="";
   document.body.style.overflow="";
 }
+var LAST_PRINT_HTML="";
+function doPrintOverlay(){
+  if(LAST_PRINT_HTML){
+    var w2=window.open("","_blank");
+    if(w2){
+      w2.document.write(LAST_PRINT_HTML);
+      w2.document.close();
+      setTimeout(function(){w2.print();},500);
+      return;
+    }
+  }
+  // Fallback - use CSS print
+  window.print();
+}
 function printPartyLedger(pid){
   var p=P.find(function(x){return x.id===pid;});
   if(!p)return;
   var st=pStats(p);
-  var runBal=0;
-  var goldBal=0;
-  var rows="";
+  var runBal=0,goldBal=0;
+  var hasGold=p.txns.some(function(t){return t.type==="GOLD_IN"||t.type==="GOLD_OUT"||t.type==="GOLD_INT";});
 
+  // Build table rows
+  var rows="";
   p.txns.forEach(function(t){
     var d=dago(t.date);
     var intr=(t.type==="CR"||t.type==="DR")?calcI(t.amt,t.rate,d,t.method):0;
     var tot=t.amt+intr;
-    var crA="",drA="",tl="",gCr="",gDr="",ic="";
-    var rShow=t.rate>0?t.rate+"%":"";
-    var meth=t.method==="compound6"?"CI-6M":t.method==="compound3"?"CI-3M":t.method==="compound12"||t.method==="compound"?"CI-Ann":"SI";
-    if(t.rate>0) rShow=t.rate+"% "+meth;
+    var crA="",drA="",tl="",ic="";
+    var rShow=t.rate>0?t.rate+"% "+(t.method==="compound6"?"CI-6M":t.method==="compound3"?"CI-3M":t.method==="compound12"||t.method==="compound"?"CI-Ann":"SI"):"";
 
-    if(t.type==="CR"){runBal+=tot;crA="Rs "+f(tot);tl="Credit";ic=intr>0?iDesc(t.amt,t.rate,d,t.method):"";}
-    else if(t.type==="DR"){runBal-=tot;drA="Rs "+f(tot);tl="Debit";ic=intr>0?iDesc(t.amt,t.rate,d,t.method):"";}
-    else if(t.type==="EMI"){runBal+=t.amt;crA="Rs "+f(t.amt);tl="EMI Mili";}
-    else if(t.type==="INT_RECV"){runBal+=t.amt;crA="Rs "+f(t.amt);tl="Interest Mila";}
-    else if(t.type==="INT_PAID"){runBal-=t.amt;drA="Rs "+f(t.amt);tl="Interest Diya";}
-    else if(t.type==="GOLD_IN"){var gm=t.grams||t.amt;goldBal+=gm;gCr=f(gm)+"gm";tl="Gold Mila";ic=t.rate>0?goldIntDesc(gm,t.rate,d):"";}
-    else if(t.type==="GOLD_OUT"){var gm=t.grams||t.amt;goldBal-=gm;gDr=f(gm)+"gm";tl="Gold Diya";}
-    else if(t.type==="GOLD_INT"){var gm=t.grams||t.amt;goldBal+=gm;gCr=f(gm)+"gm";tl="Gold Int";}
+    if(t.type==="CR"){runBal+=tot;crA=f(tot);tl="Credit";ic=intr>0?iDesc(t.amt,t.rate,d,t.method):"";}
+    else if(t.type==="DR"){runBal-=tot;drA=f(tot);tl="Debit";ic=intr>0?iDesc(t.amt,t.rate,d,t.method):"";}
+    else if(t.type==="EMI"){runBal+=t.amt;crA=f(t.amt);tl="EMI Mili";}
+    else if(t.type==="INT_RECV"){runBal+=t.amt;crA=f(t.amt);tl="Interest Mila";}
+    else if(t.type==="INT_PAID"){runBal-=t.amt;drA=f(t.amt);tl="Interest Diya";}
+    else if(t.type==="GOLD_IN"){
+      var gm=t.grams||t.amt;goldBal+=gm;tl="Gold Mila";
+      // Auto interest (informational only - shown separately)
+      var gInt=t.rate>0?calcGoldInt(gm,t.rate,d):0;
+      ic=t.rate>0?goldIntDesc(gm,t.rate,d):"";
+    }
+    else if(t.type==="GOLD_OUT"){var gm=t.grams||t.amt;goldBal-=gm;tl="Gold Diya";}
+    else if(t.type==="GOLD_INT"){var gm=t.grams||t.amt;goldBal+=gm;tl="Gold Int Mila";}
 
-    var balStr="Rs "+f(Math.abs(runBal))+" "+(runBal>=0?"CR":"DR");
+    var balStr=f(Math.abs(runBal))+" "+(runBal>=0?"CR":"DR");
     var balColor=runBal>=0?"#1D7A4F":"#C0392B";
 
     rows+="<tr>";
-    rows+="<td>"+t.date+"</td>";
+    rows+="<td style='white-space:nowrap'>"+t.date+"</td>";
     rows+="<td><b>"+tl+"</b></td>";
     rows+="<td>"+(t.desc||"-")+"</td>";
-    rows+="<td style='color:#B8860B;font-size:11px;'>"+rShow+"</td>";
-    rows+="<td style='font-size:10px;color:#9B7A50;'>"+(ic||"-")+"</td>";
-    rows+="<td style='text-align:right;color:#1D7A4F;font-weight:700;'>"+crA+"</td>";
-    rows+="<td style='text-align:right;color:#C0392B;font-weight:700;'>"+drA+"</td>";
-    rows+="<td style='text-align:right;font-weight:700;color:"+balColor+";'>"+balStr+"</td>";
-    if(gCr||gDr){
-      rows+="<td style='text-align:right;color:#B8860B;font-weight:700;'>"+gCr+"</td>";
-      rows+="<td style='text-align:right;color:#C0392B;font-weight:700;'>"+gDr+"</td>";
-      rows+="<td style='text-align:right;color:#B8860B;font-weight:700;'>"+f(Math.abs(goldBal))+"gm "+(goldBal>=0?"CR":"DR")+"</td>";
-    } else {
-      rows+="<td></td><td></td><td></td>";
+    rows+="<td style='color:#B8860B;font-size:11px;white-space:nowrap;'>"+rShow+"</td>";
+    rows+="<td style='font-size:10px;color:#9B7A50;'>"+( ic||"-" )+"</td>";
+    rows+="<td style='text-align:right;color:#1D7A4F;font-weight:700;white-space:nowrap;'>"+( crA?"Rs "+crA:"" )+"</td>";
+    rows+="<td style='text-align:right;color:#C0392B;font-weight:700;white-space:nowrap;'>"+( drA?"Rs "+drA:"" )+"</td>";
+    rows+="<td style='text-align:right;font-weight:700;white-space:nowrap;color:"+balColor+";'>Rs "+balStr+"</td>";
+    if(hasGold){
+      if(t.type==="GOLD_IN"||t.type==="GOLD_INT"){
+        rows+="<td style='text-align:right;color:#B8860B;font-weight:700;white-space:nowrap;'>"+f(t.grams||t.amt)+"gm</td><td></td>";
+      } else if(t.type==="GOLD_OUT"){
+        rows+="<td></td><td style='text-align:right;color:#C0392B;font-weight:700;white-space:nowrap;'>"+f(t.grams||t.amt)+"gm</td>";
+      } else {
+        rows+="<td></td><td></td>";
+      }
+      rows+="<td style='text-align:right;font-weight:700;white-space:nowrap;color:#B8860B;'>"+f(Math.abs(goldBal))+"gm "+(goldBal>=0?"CR":"DR")+"</td>";
     }
     rows+="</tr>";
   });
 
-  var hasGold=p.txns.some(function(t){return t.type==="GOLD_IN"||t.type==="GOLD_OUT"||t.type==="GOLD_INT";});
+  // Build HTML
+  var css="";
+  css+="*{margin:0;padding:0;box-sizing:border-box;}";
+  css+="body{font-family:Arial,sans-serif;font-size:12px;color:#111;background:#fff;}";
+  css+=".hdr{background:#5C4000;color:#FFE87C;padding:14px 20px;margin-bottom:14px;}";
+  css+=".hdr h1{font-size:20px;margin-bottom:4px;letter-spacing:.03em;}";
+  css+=".hdr p{font-size:11px;opacity:.75;}";
+  css+=".sum{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}";
+  css+=".sc{background:#FFF8DC;border:1px solid #E8D5A3;border-radius:6px;padding:8px 10px;text-align:center;}";
+  css+=".sc-l{font-size:10px;color:#9B7A50;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;}";
+  css+=".sc-v{font-size:14px;font-weight:700;}";
+  css+="table{width:100%;border-collapse:collapse;font-size:11px;}";
+  css+="th{background:#5C4000;color:#FFE87C;padding:8px 7px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;white-space:nowrap;}";
+  css+="td{padding:7px 7px;border-bottom:1px solid #F0E4C0;vertical-align:top;font-size:11px;}";
+  css+="tr:nth-child(even) td{background:#FFFDF5;}";
+  css+=".foot{margin-top:14px;background:#FFF8DC;border:2px solid #DAA520;border-radius:6px;padding:12px 16px;display:flex;justify-content:space-between;align-items:flex-start;}";
+  css+=".foot-main{font-size:15px;font-weight:700;margin-bottom:4px;}";
+  css+=".foot-sub{font-size:11px;color:#9B7A50;margin-top:4px;}";
+  css+=".gold-row{background:#FFF8DC;}";
 
   var html="<!DOCTYPE html><html><head><meta charset='UTF-8'/>";
   html+="<title>Ledger - "+p.name+"</title>";
-  html+="<style>";
-  html+="*{margin:0;padding:0;box-sizing:border-box;}";
-  html+="body{font-family:Arial,sans-serif;font-size:12px;color:#111;padding:16px;}";
-  html+=".hdr{background:#5C4000;color:#FFE87C;padding:14px 18px;border-radius:6px;margin-bottom:12px;}";
-  html+=".hdr h1{font-size:18px;margin-bottom:4px;}";
-  html+=".hdr p{font-size:11px;opacity:.8;}";
-  html+=".sum{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px;}";
-  html+=".sc{background:#FFF8DC;border:1px solid #E8D5A3;border-radius:6px;padding:8px;text-align:center;}";
-  html+=".sc label{display:block;font-size:10px;color:#9B7A50;font-weight:700;text-transform:uppercase;margin-bottom:3px;}";
-  html+=".sc span{font-size:14px;font-weight:700;}";
-  html+="table{width:100%;border-collapse:collapse;font-size:11px;}";
-  html+="th{background:#5C4000;color:#FFE87C;padding:7px 6px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;white-space:nowrap;}";
-  html+="td{padding:7px 6px;border-bottom:1px solid #F0E4C0;vertical-align:top;}";
-  html+="tr:nth-child(even) td{background:#FFFDF0;}";
-  html+=".foot{margin-top:12px;background:#FFF8DC;border:1.5px solid #DAA520;border-radius:6px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;}";
-  html+=".foot-bal{font-size:15px;font-weight:700;}";
-  html+=".foot-note{font-size:11px;color:#9B7A50;}";
-  html+="@media print{";
-  html+="  @page{margin:8mm;size:A4 landscape;}";
-  html+="  body{padding:0;}";
-  html+="}";
+  html+="<style>"+css;
+  html+="@page{margin:10mm;size:A4 landscape;}";
   html+="</style></head><body>";
 
-  // Header
   html+="<div class='hdr'>";
-  html+="<h1>"+p.name+(p.phone?" &nbsp; <span style='font-size:14px;opacity:.8;'>"+p.phone+"</span>":"")+"</h1>";
-  html+="<p>Ketan Verma Personal Ledger &nbsp;&bull;&nbsp; Print Date: "+td()+" &nbsp;&bull;&nbsp; Not for firm &nbsp;&bull;&nbsp; "+p.txns.length+" transactions</p>";
+  html+="<h1>"+p.name+(p.phone?" &nbsp;&#x2022;&nbsp; "+p.phone:"")+"</h1>";
+  html+="<p>Ketan Verma Personal Ledger &nbsp;&#x2022;&nbsp; "+td()+" &nbsp;&#x2022;&nbsp; Not for firm &nbsp;&#x2022;&nbsp; "+p.txns.length+" transactions</p>";
   html+="</div>";
 
-  // Summary
   html+="<div class='sum'>";
-  html+="<div class='sc'><label>Total Credit</label><span style='color:#1D7A4F'>Rs "+f(st.tCR)+"</span></div>";
-  html+="<div class='sc'><label>Total Debit</label><span style='color:#C0392B'>Rs "+f(st.tDR)+"</span></div>";
-  html+="<div class='sc'><label>Int Mila</label><span style='color:#B8860B'>Rs "+f(st.tIR)+"</span></div>";
-  html+="<div class='sc'><label>Int Diya</label><span style='color:#6C3483'>Rs "+f(st.tIP)+"</span></div>";
+  html+="<div class='sc'><div class='sc-l'>Total Credit</div><div class='sc-v' style='color:#1D7A4F;'>Rs "+f(st.tCR)+"</div></div>";
+  html+="<div class='sc'><div class='sc-l'>Total Debit</div><div class='sc-v' style='color:#C0392B;'>Rs "+f(st.tDR)+"</div></div>";
+  html+="<div class='sc'><div class='sc-l'>Int Mila</div><div class='sc-v' style='color:#B8860B;'>Rs "+f(st.tIR)+"</div></div>";
+  html+="<div class='sc'><div class='sc-l'>Int Diya</div><div class='sc-v' style='color:#6C3483;'>Rs "+f(st.tIP)+"</div></div>";
   if(hasGold){
-    html+="<div class='sc'><label>Gold Balance</label><span style='color:#B8860B'>"+f(Math.abs(goldBal))+"gm "+(goldBal>=0?"CR":"DR")+"</span></div>";
+    html+="<div class='sc' style='border-color:#DAA520;'><div class='sc-l' style='color:#B8860B;'>Gold Balance</div><div class='sc-v' style='color:#B8860B;'>"+f(Math.abs(goldBal))+"gm "+(goldBal>=0?"CR":"DR")+"</div></div>";
+    var autoGoldInt=0;
+    p.txns.forEach(function(t){
+      if(t.type==="GOLD_IN"&&t.rate>0) autoGoldInt+=calcGoldInt(t.grams||t.amt,t.rate,dago(t.date));
+    });
+    if(autoGoldInt>0){
+      html+="<div class='sc' style='border-color:#DAA520;'><div class='sc-l' style='color:#B8860B;'>Gold Int (Auto)</div><div class='sc-v' style='color:#B8860B;'>"+f(autoGoldInt)+"gm</div></div>";
+    }
   }
   html+="</div>";
 
-  // Table
   html+="<table><thead><tr>";
   html+="<th>Date</th><th>Type</th><th>Vivaran</th><th>Rate</th>";
   html+="<th>Interest Calculation</th>";
-  html+="<th style='text-align:right'>Credit (Rs)</th>";
-  html+="<th style='text-align:right'>Debit (Rs)</th>";
-  html+="<th style='text-align:right'>Balance</th>";
+  html+="<th style='text-align:right;'>Credit (Rs)</th>";
+  html+="<th style='text-align:right;'>Debit (Rs)</th>";
+  html+="<th style='text-align:right;'>Cash Bal</th>";
   if(hasGold){
-    html+="<th style='text-align:right;color:#FFE87C'>Gold CR</th>";
-    html+="<th style='text-align:right;color:#FFE87C'>Gold DR</th>";
-    html+="<th style='text-align:right;color:#FFE87C'>Gold Bal</th>";
+    html+="<th style='text-align:right;background:#7B5800;'>Gold CR (gm)</th>";
+    html+="<th style='text-align:right;background:#7B5800;'>Gold DR (gm)</th>";
+    html+="<th style='text-align:right;background:#7B5800;'>Gold Bal</th>";
   }
   html+="</tr></thead><tbody>"+rows+"</tbody></table>";
 
-  // Footer
   var bal=st.bal;
   html+="<div class='foot'>";
   html+="<div>";
-  html+="<div class='foot-bal'>Net Cash Balance: <span style='color:"+(bal>=0?"#1D7A4F":"#C0392B")+"'>Rs "+f(Math.abs(bal))+" "+(bal>=0?"(CR)":"(DR)")+"</span></div>";
-  if(st.tIR>0||st.tIP>0)html+="<div class='foot-note' style='margin-top:4px;'>Interest Mila: Rs "+f(st.tIR)+" &nbsp;|&nbsp; Interest Diya: Rs "+f(st.tIP)+"</div>";
-  if(hasGold)html+="<div class='foot-note' style='margin-top:4px;color:#B8860B;font-weight:700;'>Gold Balance: "+f(Math.abs(goldBal))+"gm "+(goldBal>=0?"(Mere Paas)":"(Dena Hai)")+"</div>";
+  html+="<div class='foot-main'>Cash Balance: <span style='color:"+(bal>=0?"#1D7A4F":"#C0392B")+"'>Rs "+f(Math.abs(bal))+" "+(bal>=0?"(CR)":"(DR)")+"</span></div>";
+  if(st.tIR>0||st.tIP>0) html+="<div class='foot-sub'>Interest Mila: Rs "+f(st.tIR)+" &nbsp;|&nbsp; Interest Diya: Rs "+f(st.tIP)+"</div>";
+  if(hasGold){
+    html+="<div class='foot-sub' style='color:#B8860B;font-weight:700;margin-top:6px;'>Gold Balance: "+f(Math.abs(goldBal))+"gm "+(goldBal>=0?"(Mere Paas)":"(Dena Hai)")+"</div>";
+    var autoGI=0;
+    p.txns.forEach(function(t){if(t.type==="GOLD_IN"&&t.rate>0)autoGI+=calcGoldInt(t.grams||t.amt,t.rate,dago(t.date));});
+    if(autoGI>0) html+="<div class='foot-sub' style='color:#B8860B;'>Auto Gold Interest (informational): "+f(autoGI)+"gm</div>";
+  }
   html+="</div>";
-  html+="<div class='foot-note'>Ketan Verma Personal Finance</div>";
+  html+="<div style='text-align:right;font-size:11px;color:#9B7A50;'>Ketan Verma Personal Finance<br/>Print: "+td()+"</div>";
   html+="</div>";
   html+="</body></html>";
 
-  // Open print overlay
+  // Show in print overlay
   var overlay=el("printOverlay");
   var pc=el("printContent");
   if(overlay&&pc){
     pc.innerHTML=html;
     overlay.style.display="block";
     document.body.style.overflow="hidden";
-  } else {
-    var w2=window.open("","_blank","width=900,height=700");
-    if(w2){w2.document.write(html);w2.document.close();setTimeout(function(){w2.print();},500);}
-    else{alert("Popup blocked! Browser settings mein popup allow karo.");}
   }
 }
 
