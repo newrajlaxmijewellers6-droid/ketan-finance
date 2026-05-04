@@ -730,54 +730,137 @@ function closePrintOverlay(){
   document.body.style.overflow="";
 }
 function printPartyLedger(pid){
-  var p=P.find(function(x){return x.id===pid;});if(!p)return;
-  var st=pStats(p);var runBal=0;var rows="";
+  var p=P.find(function(x){return x.id===pid;});
+  if(!p)return;
+  var st=pStats(p);
+  var runBal=0;
+  var goldBal=0;
+  var rows="";
+
   p.txns.forEach(function(t){
     var d=dago(t.date);
     var intr=(t.type==="CR"||t.type==="DR")?calcI(t.amt,t.rate,d,t.method):0;
-    var tot=t.amt+intr;var crA="",drA="",tl="";
-    if(t.type==="CR"){runBal+=tot;crA=f(tot);tl="Credit";}
-    else if(t.type==="DR"){runBal-=tot;drA=f(tot);tl="Debit";}
-    else if(t.type==="EMI"){runBal+=t.amt;crA=f(t.amt);tl="EMI Mili";}
-    else if(t.type==="INT_RECV"){runBal+=t.amt;crA=f(t.amt);tl="Interest Mila";}
-    else if(t.type==="INT_PAID"){runBal-=t.amt;drA=f(t.amt);tl="Interest Diya";}
-    var ic=intr>0?iDesc(t.amt,t.rate,d,t.method):"";
-    rows+="<tr><td>"+t.date+"</td><td>"+tl+"</td><td>"+(t.desc||"-")+"</td><td>"+(t.rate>0?t.rate+"% "+(t.method==="compound6"?"CI-6M":t.method==="compound3"?"CI-3M":t.method==="compound12"||t.method==="compound"?"CI-Ann":"SI"):"-")+"</td><td style='font-size:10px;color:#9B7A50;'>"+(ic||"-")+"</td><td style='text-align:right;color:#1D7A4F;font-weight:700;'>"+(crA?"Rs "+crA:"")+"</td><td style='text-align:right;color:#C0392B;font-weight:700;'>"+(drA?"Rs "+drA:"")+"</td><td style='text-align:right;font-weight:700;color:"+(runBal>=0?"#1D7A4F":"#C0392B")+"'>Rs "+f(Math.abs(runBal))+" "+(runBal>=0?"CR":"DR")+"</td></tr>";
+    var tot=t.amt+intr;
+    var crA="",drA="",tl="",gCr="",gDr="",ic="";
+    var rShow=t.rate>0?t.rate+"%":"";
+    var meth=t.method==="compound6"?"CI-6M":t.method==="compound3"?"CI-3M":t.method==="compound12"||t.method==="compound"?"CI-Ann":"SI";
+    if(t.rate>0) rShow=t.rate+"% "+meth;
+
+    if(t.type==="CR"){runBal+=tot;crA="Rs "+f(tot);tl="Credit";ic=intr>0?iDesc(t.amt,t.rate,d,t.method):"";}
+    else if(t.type==="DR"){runBal-=tot;drA="Rs "+f(tot);tl="Debit";ic=intr>0?iDesc(t.amt,t.rate,d,t.method):"";}
+    else if(t.type==="EMI"){runBal+=t.amt;crA="Rs "+f(t.amt);tl="EMI Mili";}
+    else if(t.type==="INT_RECV"){runBal+=t.amt;crA="Rs "+f(t.amt);tl="Interest Mila";}
+    else if(t.type==="INT_PAID"){runBal-=t.amt;drA="Rs "+f(t.amt);tl="Interest Diya";}
+    else if(t.type==="GOLD_IN"){var gm=t.grams||t.amt;goldBal+=gm;gCr=f(gm)+"gm";tl="Gold Mila";ic=t.rate>0?goldIntDesc(gm,t.rate,d):"";}
+    else if(t.type==="GOLD_OUT"){var gm=t.grams||t.amt;goldBal-=gm;gDr=f(gm)+"gm";tl="Gold Diya";}
+    else if(t.type==="GOLD_INT"){var gm=t.grams||t.amt;goldBal+=gm;gCr=f(gm)+"gm";tl="Gold Int";}
+
+    var balStr="Rs "+f(Math.abs(runBal))+" "+(runBal>=0?"CR":"DR");
+    var balColor=runBal>=0?"#1D7A4F":"#C0392B";
+
+    rows+="<tr>";
+    rows+="<td>"+t.date+"</td>";
+    rows+="<td><b>"+tl+"</b></td>";
+    rows+="<td>"+(t.desc||"-")+"</td>";
+    rows+="<td style='color:#B8860B;font-size:11px;'>"+rShow+"</td>";
+    rows+="<td style='font-size:10px;color:#9B7A50;'>"+(ic||"-")+"</td>";
+    rows+="<td style='text-align:right;color:#1D7A4F;font-weight:700;'>"+crA+"</td>";
+    rows+="<td style='text-align:right;color:#C0392B;font-weight:700;'>"+drA+"</td>";
+    rows+="<td style='text-align:right;font-weight:700;color:"+balColor+";'>"+balStr+"</td>";
+    if(gCr||gDr){
+      rows+="<td style='text-align:right;color:#B8860B;font-weight:700;'>"+gCr+"</td>";
+      rows+="<td style='text-align:right;color:#C0392B;font-weight:700;'>"+gDr+"</td>";
+      rows+="<td style='text-align:right;color:#B8860B;font-weight:700;'>"+f(Math.abs(goldBal))+"gm "+(goldBal>=0?"CR":"DR")+"</td>";
+    } else {
+      rows+="<td></td><td></td><td></td>";
+    }
+    rows+="</tr>";
   });
-  var h="<!DOCTYPE html><html><head><meta charset='UTF-8'/><title>Ledger - "+p.name+"</title>";
-  h+="<style>*{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:12px;margin:0;padding:16px;color:#111;}";
-  h+=".hdr{background:#5C4000;color:#FFE87C;padding:14px 18px;border-radius:8px;margin-bottom:14px;}";
-  h+=".hdr h1{font-size:17px;margin:0 0 3px;}.hdr p{font-size:11px;opacity:.8;margin:0;}";
-  h+=".sum{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px;}";
-  h+=".sc{background:#FFF8DC;border:1px solid #E8D5A3;border-radius:6px;padding:8px 10px;text-align:center;}";
-  h+=".sl{font-size:10px;color:#9B7A50;font-weight:700;text-transform:uppercase;margin-bottom:3px;}";
-  h+=".sv{font-size:14px;font-weight:700;}";
-  h+="table{width:100%;border-collapse:collapse;}";
-  h+="th{background:#5C4000;color:#FFE87C;padding:7px 6px;font-size:10px;text-align:left;font-weight:700;text-transform:uppercase;}";
-  h+="td{padding:6px 6px;border-bottom:1px solid #F0E4C0;font-size:11px;vertical-align:top;}";
-  h+="tr:nth-child(even) td{background:#FFFDF0;}";
-  h+=".foot{margin-top:12px;background:#FFF8DC;border:1.5px solid #DAA520;border-radius:6px;padding:10px 14px;display:flex;justify-content:space-between;}";
-  h+="@media print{@page{margin:8mm;}body{padding:0;}}";
-  h+="<div class='hdr'><h1>"+p.name+(p.phone?" &nbsp; "+p.phone:"")+"</h1><p>Ketan Verma Personal Ledger &nbsp;|&nbsp; "+td()+" &nbsp;|&nbsp; Not for firm</p></div>";
-  h+="<div class='sum'>";
-  h+="<div class='sc'><div class='sl'>Credit</div><div class='sv' style='color:#1D7A4F'>Rs "+f(st.tCR)+"</div></div>";
-  h+="<div class='sc'><div class='sl'>Debit</div><div class='sv' style='color:#C0392B'>Rs "+f(st.tDR)+"</div></div>";
-  h+="<div class='sc'><div class='sl'>Int Mila</div><div class='sv' style='color:#B8860B'>Rs "+f(st.tIR)+"</div></div>";
-  h+="<div class='sc'><div class='sl'>Int Diya</div><div class='sv' style='color:#6C3483'>Rs "+f(st.tIP)+"</div></div>";
-  h+="</div>";
-  h+="<table><tr><th>Date</th><th>Type</th><th>Vivaran</th><th>Rate%</th><th>Interest Calc.</th><th>Credit (Rs)</th><th>Debit (Rs)</th><th>Balance (Rs)</th></tr>"+rows+"</table>";
+
+  var hasGold=p.txns.some(function(t){return t.type==="GOLD_IN"||t.type==="GOLD_OUT"||t.type==="GOLD_INT";});
+
+  var html="<!DOCTYPE html><html><head><meta charset='UTF-8'/>";
+  html+="<title>Ledger - "+p.name+"</title>";
+  html+="<style>";
+  html+="*{margin:0;padding:0;box-sizing:border-box;}";
+  html+="body{font-family:Arial,sans-serif;font-size:12px;color:#111;padding:16px;}";
+  html+=".hdr{background:#5C4000;color:#FFE87C;padding:14px 18px;border-radius:6px;margin-bottom:12px;}";
+  html+=".hdr h1{font-size:18px;margin-bottom:4px;}";
+  html+=".hdr p{font-size:11px;opacity:.8;}";
+  html+=".sum{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px;}";
+  html+=".sc{background:#FFF8DC;border:1px solid #E8D5A3;border-radius:6px;padding:8px;text-align:center;}";
+  html+=".sc label{display:block;font-size:10px;color:#9B7A50;font-weight:700;text-transform:uppercase;margin-bottom:3px;}";
+  html+=".sc span{font-size:14px;font-weight:700;}";
+  html+="table{width:100%;border-collapse:collapse;font-size:11px;}";
+  html+="th{background:#5C4000;color:#FFE87C;padding:7px 6px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;white-space:nowrap;}";
+  html+="td{padding:7px 6px;border-bottom:1px solid #F0E4C0;vertical-align:top;}";
+  html+="tr:nth-child(even) td{background:#FFFDF0;}";
+  html+=".foot{margin-top:12px;background:#FFF8DC;border:1.5px solid #DAA520;border-radius:6px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;}";
+  html+=".foot-bal{font-size:15px;font-weight:700;}";
+  html+=".foot-note{font-size:11px;color:#9B7A50;}";
+  html+="@media print{";
+  html+="  @page{margin:8mm;size:A4 landscape;}";
+  html+="  body{padding:0;}";
+  html+="}";
+  html+="</style></head><body>";
+
+  // Header
+  html+="<div class='hdr'>";
+  html+="<h1>"+p.name+(p.phone?" &nbsp; <span style='font-size:14px;opacity:.8;'>"+p.phone+"</span>":"")+"</h1>";
+  html+="<p>Ketan Verma Personal Ledger &nbsp;&bull;&nbsp; Print Date: "+td()+" &nbsp;&bull;&nbsp; Not for firm &nbsp;&bull;&nbsp; "+p.txns.length+" transactions</p>";
+  html+="</div>";
+
+  // Summary
+  html+="<div class='sum'>";
+  html+="<div class='sc'><label>Total Credit</label><span style='color:#1D7A4F'>Rs "+f(st.tCR)+"</span></div>";
+  html+="<div class='sc'><label>Total Debit</label><span style='color:#C0392B'>Rs "+f(st.tDR)+"</span></div>";
+  html+="<div class='sc'><label>Int Mila</label><span style='color:#B8860B'>Rs "+f(st.tIR)+"</span></div>";
+  html+="<div class='sc'><label>Int Diya</label><span style='color:#6C3483'>Rs "+f(st.tIP)+"</span></div>";
+  if(hasGold){
+    html+="<div class='sc'><label>Gold Balance</label><span style='color:#B8860B'>"+f(Math.abs(goldBal))+"gm "+(goldBal>=0?"CR":"DR")+"</span></div>";
+  }
+  html+="</div>";
+
+  // Table
+  html+="<table><thead><tr>";
+  html+="<th>Date</th><th>Type</th><th>Vivaran</th><th>Rate</th>";
+  html+="<th>Interest Calculation</th>";
+  html+="<th style='text-align:right'>Credit (Rs)</th>";
+  html+="<th style='text-align:right'>Debit (Rs)</th>";
+  html+="<th style='text-align:right'>Balance</th>";
+  if(hasGold){
+    html+="<th style='text-align:right;color:#FFE87C'>Gold CR</th>";
+    html+="<th style='text-align:right;color:#FFE87C'>Gold DR</th>";
+    html+="<th style='text-align:right;color:#FFE87C'>Gold Bal</th>";
+  }
+  html+="</tr></thead><tbody>"+rows+"</tbody></table>";
+
+  // Footer
   var bal=st.bal;
-  h+="<div class='foot'><div><strong>Net Balance: <span style='color:"+(bal>=0?"#1D7A4F":"#C0392B")+"'>Rs "+f(Math.abs(bal))+" "+(bal>=0?"(CR)":"(DR)")+"</span></strong></div><div style='font-size:11px;color:#9B7A50;'>"+p.txns.length+" transactions</div></div>";
-  h+="</body></html>";
-  h+="</body></html>";
+  html+="<div class='foot'>";
+  html+="<div>";
+  html+="<div class='foot-bal'>Net Cash Balance: <span style='color:"+(bal>=0?"#1D7A4F":"#C0392B")+"'>Rs "+f(Math.abs(bal))+" "+(bal>=0?"(CR)":"(DR)")+"</span></div>";
+  if(st.tIR>0||st.tIP>0)html+="<div class='foot-note' style='margin-top:4px;'>Interest Mila: Rs "+f(st.tIR)+" &nbsp;|&nbsp; Interest Diya: Rs "+f(st.tIP)+"</div>";
+  if(hasGold)html+="<div class='foot-note' style='margin-top:4px;color:#B8860B;font-weight:700;'>Gold Balance: "+f(Math.abs(goldBal))+"gm "+(goldBal>=0?"(Mere Paas)":"(Dena Hai)")+"</div>";
+  html+="</div>";
+  html+="<div class='foot-note'>Ketan Verma Personal Finance</div>";
+  html+="</div>";
+  html+="</body></html>";
+
+  // Open print overlay
   var overlay=el("printOverlay");
   var pc=el("printContent");
-  pc.innerHTML=h;
-  overlay.style.display="block";
-  document.body.style.overflow="hidden";
-  el("mainApp").style.overflow="hidden";
-  setTimeout(function(){window.print();},600);
+  if(overlay&&pc){
+    pc.innerHTML=html;
+    overlay.style.display="block";
+    document.body.style.overflow="hidden";
+  } else {
+    var w2=window.open("","_blank","width=900,height=700");
+    if(w2){w2.document.write(html);w2.document.close();setTimeout(function(){w2.print();},500);}
+    else{alert("Popup blocked! Browser settings mein popup allow karo.");}
+  }
 }
+
 function csvParty(pid){
   var p=P.find(function(x){return x.id===pid;});if(!p)return;
   var st=pStats(p);var runBal=0;
